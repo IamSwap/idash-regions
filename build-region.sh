@@ -32,31 +32,43 @@ DIR="packs/$ID"; mkdir -p "$DIR"
 TMP="build-tmp/$ID"; rm -rf "$TMP"; mkdir -p "$TMP/cf"
 CACHE="build-tmp/zones"; mkdir -p "$CACHE"
 
-echo "1/4 Fetching OSM extract (cached, resumable) + clipping to state bbox…"
+echo "1/4 Fetching OSM extract (cached) + clipping to state bbox…"
+# EU OSM mirrors throttle per-connection (single-stream can be <20 KB/s); aria2 with many
+# connections is ~100x faster. Fall back to resumable curl if aria2 isn't installed.
+dl() {  # <url> <dest>
+  if command -v aria2c >/dev/null 2>&1; then
+    aria2c -x16 -s16 -k1M --console-log-level=warn -d "$(dirname "$2")" -o "$(basename "$2")" "$1"
+  else
+    curl -L --fail -C - -A "idash-regions/1.0" -o "$2" "$1"
+  fi
+}
 # Prefer OSM France's per-state extract (smaller); fall back to the Geofabrik zone extract.
 STATE_PBF="$CACHE/$ID.osm.pbf"
 if [ ! -f "$STATE_PBF" ]; then
   if curl -sIL --fail "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" >/dev/null 2>&1; then
-    curl -L --fail -C - -A "idash-regions/1.0" -o "$STATE_PBF" \
-      "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf"
+    dl "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" "$STATE_PBF"
   else
     ZONE_PBF="$CACHE/$ZONE-latest.osm.pbf"
-    [ -f "$ZONE_PBF" ] || curl -L --fail -C - -A "idash-regions/1.0" \
-      -o "$ZONE_PBF" "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf"
+    [ -f "$ZONE_PBF" ] || dl "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf" "$ZONE_PBF"
     STATE_PBF="$ZONE_PBF"
   fi
 fi
 osmium extract -b "$W,$S,$E,$N" "$STATE_PBF" -o "$TMP/cf/region.osm.pbf" -f pbf --overwrite
 
-echo "2/4 Building Valhalla tiles + extract tar (Docker)…"
-docker run --rm --entrypoint bash -v "$PWD/$TMP/cf:/cf" ghcr.io/gis-ops/docker-valhalla/valhalla:latest -lc '
-  set -e; cd /cf
-  valhalla_build_config --mjolnir-tile-dir /cf/t --mjolnir-tile-extract /cf/tiles.tar > v.json
-  valhalla_build_tiles -c v.json region.osm.pbf >/dev/null 2>&1
-  valhalla_build_extract -c v.json -v >/dev/null 2>&1'
-cp "$TMP/cf/tiles.tar" "$DIR/tiles.tar"
-rm -rf "$TMP"
-echo "    routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
+if [ -f "$DIR/tiles.tar" ]; then
+  echo "2/4 Routing tar already built ($(du -h "$DIR/tiles.tar" | cut -f1)) — reusing."
+  rm -rf "$TMP"
+else
+  echo "2/4 Building Valhalla tiles + extract tar (Docker)…"
+  docker run --rm --entrypoint bash -v "$PWD/$TMP/cf:/cf" ghcr.io/gis-ops/docker-valhalla/valhalla:latest -lc '
+    set -e; cd /cf
+    valhalla_build_config --mjolnir-tile-dir /cf/t --mjolnir-tile-extract /cf/tiles.tar > v.json
+    valhalla_build_tiles -c v.json region.osm.pbf >/dev/null 2>&1
+    valhalla_build_extract -c v.json -v >/dev/null 2>&1'
+  cp "$TMP/cf/tiles.tar" "$DIR/tiles.tar"
+  rm -rf "$TMP"
+  echo "    routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
+fi
 
 echo "3/4 Building dark basemap…"
 ./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ"
@@ -65,18 +77,18 @@ echo "4/4 Writing meta + catalog (large files → GitHub Release)…"
 fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
 RMB=$(fsize_mb "$DIR/tiles.tar"); BMB=$(fsize_mb "$DIR/basemap.mbtiles"); SIZE_MB=$(( RMB + BMB ))
 ROUTING_URL=""; BASEMAP_URL=""
-publish() {  # <file> <asset-name> → echoes URL if uploaded to a release, else nothing
-  local f="$1" asset="$2"
+publish() {  # <file> → echoes the release download URL if uploaded, else nothing
+  local f="$1" asset; asset="$(basename "$f")"   # release tag ($ID) namespaces the asset
   local mb=$(( $(stat -f%z "$f" 2>/dev/null || stat -c%s "$f") / 1000000 ))
   if [ "$mb" -ge "$REL_MB" ]; then
     gh release view "$ID" -R "$REPO" >/dev/null 2>&1 || \
       gh release create "$ID" -R "$REPO" -t "$NAME offline pack" -n "Offline routing + basemap for $NAME." >/dev/null
-    gh release upload "$ID" -R "$REPO" "$f#$asset" --clobber >/dev/null
+    gh release upload "$ID" -R "$REPO" "$f" --clobber >/dev/null
     echo "https://github.com/$REPO/releases/download/$ID/$asset"
   fi
 }
-ROUTING_URL=$(publish "$DIR/tiles.tar" "$ID-tiles.tar")
-BASEMAP_URL=$(publish "$DIR/basemap.mbtiles" "$ID-basemap.mbtiles")
+ROUTING_URL=$(publish "$DIR/tiles.tar")
+BASEMAP_URL=$(publish "$DIR/basemap.mbtiles")
 [ -n "$ROUTING_URL" ] && rm -f "$DIR/tiles.tar"        # hosted on release, don't bloat repo
 [ -n "$BASEMAP_URL" ] && rm -f "$DIR/basemap.mbtiles"
 

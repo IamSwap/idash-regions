@@ -25,7 +25,11 @@ done
 echo "    planet: $PLANET"
 
 echo "2/3 Extracting region vector tiles (z0-$MAXZ)…"
-pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$MAXZ"
+for attempt in 1 2 3 4 5; do
+  if pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$MAXZ"; then break; fi
+  echo "    extract attempt $attempt failed (transient?) — retrying…"; sleep 5
+  [ "$attempt" = 5 ] && { echo "extract failed after 5 attempts"; exit 1; }
+done
 cp render/dark.json render/config.json "$BUILD/"
 
 echo "3/3 Rendering dark raster → mbtiles…"
@@ -33,7 +37,11 @@ docker rm -f idash-tsgl >/dev/null 2>&1 || true
 docker run -d --name idash-tsgl -p 8080:8080 -v "$PWD/$BUILD:/data" \
   maptiler/tileserver-gl:latest --config /data/config.json >/dev/null
 for i in $(seq 1 40); do curl -sf -o /dev/null "http://localhost:8080/styles/dark/0/0/0.png" && break; sleep 1; done
-python3 render/render-mbtiles.py "$DIR/basemap.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ"
+# Self-contained Pillow (system python3 may lack it / be externally-managed).
+VENV="build-tmp/venv"
+[ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
+"$VENV/bin/pip" install --quiet --disable-pip-version-check pillow
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
 rm -rf "$BUILD"
 echo "✅ basemap → $DIR/basemap.mbtiles ($(du -h "$DIR/basemap.mbtiles" | cut -f1))"

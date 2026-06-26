@@ -1,0 +1,13 @@
+{
+  "id": "maharashtra",
+  "name": "Maharashtra",
+  "bbox": [
+    72.6,
+    15.6,
+    80.9,
+    22.1
+  ],
+  "sizeMB": 438,
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap.mbtiles"
+}

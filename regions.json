@@ -1,14 +1,15 @@
 [
   {
-    "id": "pune",
-    "name": "Pune",
-    "routingURL": "https://iamswap.github.io/idash-regions/packs/pune/tiles.tar",
+    "id": "maharashtra",
+    "name": "Maharashtra",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap.mbtiles",
     "bbox": [
-      73.8,
-      18.49,
-      73.92,
-      18.58
+      72.6,
+      15.6,
+      80.9,
+      22.1
     ],
-    "sizeMB": 7
+    "sizeMB": 438
   }
 ]
