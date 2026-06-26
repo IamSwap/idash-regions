@@ -1,0 +1,14 @@
+[
+  {
+    "id": "pune",
+    "name": "Pune",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/pune/tiles.tar",
+    "bbox": [
+      73.8,
+      18.49,
+      73.92,
+      18.58
+    ],
+    "sizeMB": 7
+  }
+]

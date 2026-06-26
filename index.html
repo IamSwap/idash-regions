@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iDash — Offline Regions</title>
+<style>
+  :root{
+    --ink:#0A0D14; --surface:#121620; --surface-hi:#1B2130; --hairline:#2A3140;
+    --text:#EEF2FA; --muted:#8A93A6; --accent:#3B82F6; --go:#32D74B;
+  }
+  *{box-sizing:border-box} body{margin:0}
+  body{background:var(--ink);color:var(--text);
+    font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    -webkit-font-smoothing:antialiased;padding:0 18px 64px}
+  .wrap{max-width:780px;margin:0 auto}
+  header{padding:40px 0 12px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:40px;height:40px;border-radius:11px;background:var(--accent);display:grid;place-items:center;font-size:20px}
+  h1{font-size:30px;font-weight:800;letter-spacing:.3px;margin:18px 0 4px}
+  .sub{color:var(--muted);margin:0}
+  .card{background:var(--surface);border:1px solid var(--hairline);border-radius:18px;padding:18px;margin:16px 0}
+  .eyebrow{font-size:12px;letter-spacing:1.8px;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 12px}
+  code.url{display:block;background:var(--surface-hi);border:1px solid var(--hairline);border-radius:10px;
+    padding:12px 14px;color:var(--text);font-size:14px;word-break:break-all;cursor:pointer}
+  .hint{color:var(--muted);font-size:13px;margin:10px 0 0}
+  .region{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid var(--hairline)}
+  .region:first-of-type{border-top:0}
+  .region .meta{flex:1;min-width:0}
+  .region .name{font-weight:700}
+  .region .small{color:var(--muted);font-size:13px}
+  .dl{display:inline-flex;align-items:center;gap:6px;background:var(--surface-hi);border:1px solid var(--hairline);
+    color:var(--accent);text-decoration:none;border-radius:999px;padding:7px 13px;font-size:13px;font-weight:600;margin-left:8px}
+  .dl:hover{border-color:var(--accent)}
+  footer{color:var(--muted);font-size:13px;margin-top:28px;line-height:1.7}
+  footer a{color:var(--accent)}
+  .empty{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><div class="logo">🏔️</div><strong style="font-size:22px">iDash</strong></div>
+    <h1>Offline Regions</h1>
+    <p class="sub">Downloadable map &amp; routing packs for riding where there's no signal.</p>
+  </header>
+
+  <div class="card">
+    <p class="eyebrow">Use in the app</p>
+    <code class="url" id="catalogUrl" title="Tap to copy">…</code>
+    <p class="hint">Paste this into iDash → <b>Settings → Offline maps → Region catalog</b>, tap <b>Load</b>, then download the regions you need. Or tap a download below and open the file in iDash.</p>
+  </div>
+
+  <div class="card">
+    <p class="eyebrow">Available regions</p>
+    <div id="regions"><p class="empty">Loading…</p></div>
+  </div>
+
+  <footer>
+    Routing packs are built with <a href="https://valhalla.github.io/valhalla/">Valhalla</a> from
+    <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> data (© OpenStreetMap contributors, ODbL).
+    Add a region with <code>build-region.sh</code> — see the repo README.
+  </footer>
+</div>
+
+<script>
+  const base = location.origin + location.pathname.replace(/\/[^/]*$/, '');
+  const catalog = base + '/regions.json';
+  const el = document.getElementById('catalogUrl');
+  el.textContent = catalog;
+  el.onclick = () => navigator.clipboard?.writeText(catalog).then(() => { el.textContent = 'Copied!'; setTimeout(() => el.textContent = catalog, 1200); });
+
+  fetch('regions.json').then(r => r.json()).then(list => {
+    const box = document.getElementById('regions');
+    if (!list.length) { box.innerHTML = '<p class="empty">No regions published yet.</p>'; return; }
+    box.innerHTML = list.map(r => {
+      const cov = r.bbox ? `${r.bbox[1].toFixed(2)},${r.bbox[0].toFixed(2)} – ${r.bbox[3].toFixed(2)},${r.bbox[2].toFixed(2)}` : '';
+      const dlR = r.routingURL ? `<a class="dl" href="${r.routingURL}">↓ routing</a>` : '';
+      const dlB = r.basemapURL ? `<a class="dl" href="${r.basemapURL}">↓ basemap</a>` : '';
+      return `<div class="region"><div class="meta"><div class="name">${r.name}</div>
+        <div class="small">${r.sizeMB ?? '?'} MB${cov ? ' · ' + cov : ''}${r.basemapURL ? '' : ' · routing only'}</div></div>${dlR}${dlB}</div>`;
+    }).join('');
+  }).catch(() => document.getElementById('regions').innerHTML = '<p class="empty">Could not load regions.json.</p>');
+</script>
+</body>
+</html>
