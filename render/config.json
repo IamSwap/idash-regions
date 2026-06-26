@@ -1,6 +1,6 @@
 {
   "options": {
-    "paths": { "root": "/data", "styles": "/data", "pmtiles": "/data" }
+    "paths": { "root": "/data", "styles": "/data", "pmtiles": "/data", "fonts": "/data/fonts" }
   },
   "data": {
     "v": { "pmtiles": "region.pmtiles" }

@@ -10,6 +10,10 @@
 set -euo pipefail
 if [ "$#" -lt 6 ]; then echo "usage: $0 <id> \"<Name>\" <W> <S> <E> <N> [maxzoom]"; exit 1; fi
 ID="$1"; NAME="$2"; W="$3"; S="$4"; E="$5"; N="$6"; MAXZ="${7:-12}"; MINZ=5
+# The Protomaps planet caps vector tiles at z14; raster can still be rendered sharply at higher
+# zooms from that vector (geometry is vector, not pixels). So extract vector up to z14, but render
+# raster up to MAXZ — rendering the pack to the app's nav zoom (17) avoids raster overzoom blur.
+VMAXZ=$MAXZ; [ "$VMAXZ" -gt 14 ] && VMAXZ=14
 cd "$(dirname "$0")"
 DIR="packs/$ID"; mkdir -p "$DIR"
 BUILD="build-tmp/$ID-basemap"; rm -rf "$BUILD"; mkdir -p "$BUILD"
@@ -24,13 +28,14 @@ done
 [ -n "$PLANET" ] || { echo "no Protomaps planet build found in last 16 days"; exit 1; }
 echo "    planet: $PLANET"
 
-echo "2/3 Extracting region vector tiles (z0-$MAXZ)…"
+echo "2/3 Extracting region vector tiles (z0-$VMAXZ; raster renders to z$MAXZ)…"
 for attempt in 1 2 3 4 5; do
-  if pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$MAXZ"; then break; fi
+  if pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$VMAXZ"; then break; fi
   echo "    extract attempt $attempt failed (transient?) — retrying…"; sleep 5
   [ "$attempt" = 5 ] && { echo "extract failed after 5 attempts"; exit 1; }
 done
 cp render/dark.json render/config.json "$BUILD/"
+cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
 echo "3/3 Rendering dark raster → mbtiles…"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true

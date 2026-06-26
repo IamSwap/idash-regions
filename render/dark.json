@@ -1,6 +1,7 @@
 {
   "version": 8,
   "name": "idash-dark",
+  "glyphs": "http://localhost:8080/fonts/{fontstack}/{range}.pbf",
   "sources": { "v": { "type": "vector", "url": "pmtiles://v" } },
   "layers": [
     { "id": "bg", "type": "background", "paint": { "background-color": "#0b0e13" } },
@@ -60,6 +61,41 @@
     { "id": "boundary", "type": "line", "source": "v", "source-layer": "boundaries",
       "filter": ["<=", ["get", "kind_detail"], 4], "minzoom": 4,
       "paint": { "line-color": "#39414e", "line-dasharray": [3, 2],
-        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.5, 10, 1.2] } }
+        "line-width": ["interpolate", ["linear"], ["zoom"], 4, 0.5, 10, 1.2] } },
+
+    { "id": "label-road", "type": "symbol", "source": "v", "source-layer": "roads",
+      "filter": ["in", ["get", "kind"], ["literal", ["highway", "major_road", "medium_road"]]],
+      "minzoom": 12,
+      "layout": { "symbol-placement": "line", "text-font": ["Noto Sans Regular"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 12, 9, 16, 12],
+        "text-letter-spacing": 0.05, "symbol-spacing": 350 },
+      "paint": { "text-color": "#9aa3b2", "text-halo-color": "#0b0e13", "text-halo-width": 1.4 } },
+
+    { "id": "label-place-small", "type": "symbol", "source": "v", "source-layer": "places",
+      "filter": ["in", ["get", "kind"], ["literal", ["village", "locality", "suburb", "neighbourhood"]]],
+      "minzoom": 12,
+      "layout": { "text-font": ["Noto Sans Regular"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 12, 10, 16, 13],
+        "text-max-width": 7 },
+      "paint": { "text-color": "#aeb6c4", "text-halo-color": "#0b0e13", "text-halo-width": 1.6 } },
+
+    { "id": "label-place-town", "type": "symbol", "source": "v", "source-layer": "places",
+      "filter": ["==", ["get", "kind"], "town"], "minzoom": 9,
+      "layout": { "text-font": ["Noto Sans Regular"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 9, 11, 14, 15],
+        "text-max-width": 8 },
+      "paint": { "text-color": "#cdd3de", "text-halo-color": "#0b0e13", "text-halo-width": 1.8 } },
+
+    { "id": "label-place-city", "type": "symbol", "source": "v", "source-layer": "places",
+      "filter": ["in", ["get", "kind"], ["literal", ["city", "state_capital", "capital"]]],
+      "minzoom": 5,
+      "layout": { "text-font": ["Noto Sans Regular"],
+        "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 12, 12, 20],
+        "text-max-width": 8, "text-transform": "uppercase", "text-letter-spacing": 0.04 },
+      "paint": { "text-color": "#e7ebf2", "text-halo-color": "#0b0e13", "text-halo-width": 2 } }
   ]
 }

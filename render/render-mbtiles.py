@@ -32,7 +32,7 @@ def jobs():
 def fetch(job):
     z, x, y = job
     try:
-        with urllib.request.urlopen(f"{BASE}/{z}/{x}/{y}.png", timeout=30) as r:
+        with urllib.request.urlopen(f"{BASE}/{z}/{x}/{y}@2x.png", timeout=30) as r:
             raw = r.read()
         # Quantize: these flat dark tiles have few colors, so an 8-bit palette shrinks
         # them ~4x with no visible loss — keeps state-size packs small.
