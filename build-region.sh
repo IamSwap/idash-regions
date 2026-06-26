@@ -1,38 +1,92 @@
 #!/usr/bin/env bash
-# Build a region's offline ROUTING pack (Valhalla tile-extract tar) from OSM and add it to the
-# catalog. Basemap packs are added separately (see README — OSM raster scraping is blocked).
+# Build a full offline region pack (ROUTING + dark BASEMAP) for an Indian state and add it to the
+# catalog. Routing comes from the state's Geofabrik zone extract (clipped to the state bbox);
+# basemap is self-rendered (see build-basemap.sh).
 #
-# Usage:  ./build-region.sh <id> "<Name>" <W> <S> <E> <N>
-# Example:./build-region.sh pune "Pune" 73.80 18.49 73.92 18.58
+# Usage by state id (looks up bbox + zone in states.tsv):
+#   ./build-region.sh maharashtra
+# Or explicit:
+#   ./build-region.sh <id> "<Name>" <zone> <W> <S> <E> <N> [maxzoom]
 #
-# Requires: docker (running), osmium-tool (brew install osmium-tool), curl, python3.
+# Artifacts over 50 MB are uploaded as GitHub Release assets (tag = region id) and the catalog
+# points at the release URLs, so the repo stays small. Requires: docker, osmium-tool, pmtiles,
+# python3+pillow, gh (for release upload). REL_MB=50 by default.
 set -euo pipefail
-if [ "$#" -ne 6 ]; then echo "usage: $0 <id> \"<Name>\" <W> <S> <E> <N>"; exit 1; fi
-ID="$1"; NAME="$2"; W="$3"; S="$4"; E="$5"; N="$6"
 cd "$(dirname "$0")"
-DIR="packs/$ID"; TMP="build-tmp/$ID"
-mkdir -p "$DIR" "$TMP/cf"
+REL_MB="${REL_MB:-50}"
+REPO="IamSwap/idash-regions"
 
-echo "1/3 Fetching OSM road network for $NAME ($W,$S,$E,$N)…"
-Q="[out:xml][timeout:600];way[\"highway\"]($S,$W,$N,$E);(._;>;);out body;"
-curl -sS --fail-with-body -A "idash-regions/1.0 (offline pack builder)" \
-  -o "$TMP/$ID.osm" --data-urlencode "data=$Q" https://overpass.kumi.systems/api/interpreter
-tail -c 12 "$TMP/$ID.osm" | grep -q "</osm>" || { echo "Overpass response truncated — retry"; exit 1; }
-osmium cat "$TMP/$ID.osm" -o "$TMP/cf/region.osm.pbf" -f pbf --overwrite
+if [ "$#" -eq 1 ]; then
+  row=$(grep -E "^$1\b" states.tsv || true)
+  [ -n "$row" ] || { echo "unknown state id '$1' — see states.tsv"; exit 1; }
+  IFS=$'\t' read -r ID NAME ZONE W S E N MAXZ <<<"$row"
+  MAXZ="${MAXZ:-12}"
+elif [ "$#" -ge 7 ]; then
+  ID="$1"; NAME="$2"; ZONE="$3"; W="$4"; S="$5"; E="$6"; N="$7"; MAXZ="${8:-12}"
+else
+  echo "usage: $0 <state-id>   |   $0 <id> \"<Name>\" <zone> <W> <S> <E> <N> [maxzoom]"; exit 1
+fi
+echo "▶ $NAME ($ID) zone=$ZONE bbox=$W,$S,$E,$N maxz=$MAXZ"
 
-echo "2/3 Building Valhalla tiles + extract tar (Docker)…"
+DIR="packs/$ID"; mkdir -p "$DIR"
+TMP="build-tmp/$ID"; rm -rf "$TMP"; mkdir -p "$TMP/cf"
+CACHE="build-tmp/zones"; mkdir -p "$CACHE"
+
+echo "1/4 Fetching OSM extract (cached, resumable) + clipping to state bbox…"
+# Prefer OSM France's per-state extract (smaller); fall back to the Geofabrik zone extract.
+STATE_PBF="$CACHE/$ID.osm.pbf"
+if [ ! -f "$STATE_PBF" ]; then
+  if curl -sIL --fail "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" >/dev/null 2>&1; then
+    curl -L --fail -C - -A "idash-regions/1.0" -o "$STATE_PBF" \
+      "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf"
+  else
+    ZONE_PBF="$CACHE/$ZONE-latest.osm.pbf"
+    [ -f "$ZONE_PBF" ] || curl -L --fail -C - -A "idash-regions/1.0" \
+      -o "$ZONE_PBF" "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf"
+    STATE_PBF="$ZONE_PBF"
+  fi
+fi
+osmium extract -b "$W,$S,$E,$N" "$STATE_PBF" -o "$TMP/cf/region.osm.pbf" -f pbf --overwrite
+
+echo "2/4 Building Valhalla tiles + extract tar (Docker)…"
 docker run --rm --entrypoint bash -v "$PWD/$TMP/cf:/cf" ghcr.io/gis-ops/docker-valhalla/valhalla:latest -lc '
   set -e; cd /cf
   valhalla_build_config --mjolnir-tile-dir /cf/t --mjolnir-tile-extract /cf/tiles.tar > v.json
   valhalla_build_tiles -c v.json region.osm.pbf >/dev/null 2>&1
   valhalla_build_extract -c v.json -v >/dev/null 2>&1'
-
 cp "$TMP/cf/tiles.tar" "$DIR/tiles.tar"
-cat > "$DIR/meta.json" <<EOF
-{ "id": "$ID", "name": "$NAME", "bbox": [$W, $S, $E, $N] }
-EOF
 rm -rf "$TMP"
+echo "    routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
 
-echo "3/3 Regenerating catalog…"
+echo "3/4 Building dark basemap…"
+./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ"
+
+echo "4/4 Writing meta + catalog (large files → GitHub Release)…"
+fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
+RMB=$(fsize_mb "$DIR/tiles.tar"); BMB=$(fsize_mb "$DIR/basemap.mbtiles"); SIZE_MB=$(( RMB + BMB ))
+ROUTING_URL=""; BASEMAP_URL=""
+publish() {  # <file> <asset-name> → echoes URL if uploaded to a release, else nothing
+  local f="$1" asset="$2"
+  local mb=$(( $(stat -f%z "$f" 2>/dev/null || stat -c%s "$f") / 1000000 ))
+  if [ "$mb" -ge "$REL_MB" ]; then
+    gh release view "$ID" -R "$REPO" >/dev/null 2>&1 || \
+      gh release create "$ID" -R "$REPO" -t "$NAME offline pack" -n "Offline routing + basemap for $NAME." >/dev/null
+    gh release upload "$ID" -R "$REPO" "$f#$asset" --clobber >/dev/null
+    echo "https://github.com/$REPO/releases/download/$ID/$asset"
+  fi
+}
+ROUTING_URL=$(publish "$DIR/tiles.tar" "$ID-tiles.tar")
+BASEMAP_URL=$(publish "$DIR/basemap.mbtiles" "$ID-basemap.mbtiles")
+[ -n "$ROUTING_URL" ] && rm -f "$DIR/tiles.tar"        # hosted on release, don't bloat repo
+[ -n "$BASEMAP_URL" ] && rm -f "$DIR/basemap.mbtiles"
+
+python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_URL" "$SIZE_MB" <<'PY'
+import json, sys
+id, name, W, S, E, N, ru, bu, size = sys.argv[1:10]
+m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size)}
+if ru: m["routingURL"] = ru
+if bu: m["basemapURL"] = bu
+json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
+PY
 ./gen-catalog.sh
-echo "✅ Built $NAME → $DIR/tiles.tar ($(du -h "$DIR/tiles.tar" | cut -f1)). git add/commit/push to publish."
+echo "✅ $NAME built. git add/commit/push to publish."

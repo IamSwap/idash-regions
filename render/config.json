@@ -1,0 +1,11 @@
+{
+  "options": {
+    "paths": { "root": "/data", "styles": "/data", "pmtiles": "/data" }
+  },
+  "data": {
+    "v": { "pmtiles": "region.pmtiles" }
+  },
+  "styles": {
+    "dark": { "style": "dark.json" }
+  }
+}
