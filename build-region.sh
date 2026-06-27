@@ -8,9 +8,11 @@
 # Or explicit:
 #   ./build-region.sh <id> "<Name>" <zone> <W> <S> <E> <N> [maxzoom]
 #
+# Routing (native pyvalhalla) and the basemap (Docker tileserver-gl) are built in parallel.
 # Artifacts over 50 MB are uploaded as GitHub Release assets (tag = region id) and the catalog
-# points at the release URLs, so the repo stays small. Requires: docker, osmium-tool, pmtiles,
-# python3+pillow, gh (for release upload). REL_MB=50 by default.
+# points at the release URLs, so the repo stays small. Requires: osmium-tool, pmtiles, gh (release
+# upload), Python ≥3.12 (pyvalhalla), and docker (basemap render; also routing if
+# USE_DOCKER_VALHALLA=1). REL_MB=50 by default.
 set -euo pipefail
 cd "$(dirname "$0")"
 REL_MB="${REL_MB:-50}"
@@ -29,10 +31,9 @@ fi
 echo "▶ $NAME ($ID) zone=$ZONE bbox=$W,$S,$E,$N maxz=$MAXZ"
 
 DIR="packs/$ID"; mkdir -p "$DIR"
-TMP="build-tmp/$ID"; rm -rf "$TMP"; mkdir -p "$TMP/cf"
+TMP="build-tmp/$ID"
 CACHE="build-tmp/zones"; mkdir -p "$CACHE"
 
-echo "1/4 Fetching OSM extract (cached) + clipping to state bbox…"
 # EU OSM mirrors throttle per-connection (single-stream can be <20 KB/s); aria2 with many
 # connections is ~100x faster. Fall back to resumable curl if aria2 isn't installed.
 dl() {  # <url> <dest>
@@ -42,38 +43,96 @@ dl() {  # <url> <dest>
     curl -L --fail -C - -A "idash-regions/1.0" -o "$2" "$1"
   fi
 }
-# Prefer OSM France's per-state extract (smaller); fall back to the Geofabrik zone extract.
-STATE_PBF="$CACHE/$ID.osm.pbf"
-if [ ! -f "$STATE_PBF" ]; then
-  if curl -sIL --fail "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" >/dev/null 2>&1; then
-    dl "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" "$STATE_PBF"
-  else
-    ZONE_PBF="$CACHE/$ZONE-latest.osm.pbf"
-    [ -f "$ZONE_PBF" ] || dl "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf" "$ZONE_PBF"
-    STATE_PBF="$ZONE_PBF"
+
+# Pick a Python ≥3.12 (pyvalhalla wheels are cp312-abi3); prints nothing + fails if none found.
+find_py312() {
+  local c v
+  for c in python3.14 python3.13 python3.12 python3; do
+    command -v "$c" >/dev/null 2>&1 || continue
+    v=$("$c" -c 'import sys; print(1 if sys.version_info[:2] >= (3, 12) else 0)' 2>/dev/null || echo 0)
+    [ "$v" = 1 ] && { echo "$c"; return 0; }
+  done
+  return 1
+}
+
+# Build Valhalla routing tiles → $DIR/tiles.tar. Native pyvalhalla by default: no Docker image, and
+# tiles are written to APFS instead of a slow Docker bind mount. Set USE_DOCKER_VALHALLA=1 to use the
+# Docker image instead (A/B or fallback if the pyvalhalla graph version ever mismatches the app).
+build_routing() {
+  if [ -f "$DIR/tiles.tar" ]; then
+    echo "routing tar already built ($(du -h "$DIR/tiles.tar" | cut -f1)) — reusing."
+    return 0
   fi
-fi
-osmium extract -b "$W,$S,$E,$N" "$STATE_PBF" -o "$TMP/cf/region.osm.pbf" -f pbf --overwrite
+  rm -rf "$TMP"; mkdir -p "$TMP/cf"
 
-if [ -f "$DIR/tiles.tar" ]; then
-  echo "2/4 Routing tar already built ($(du -h "$DIR/tiles.tar" | cut -f1)) — reusing."
+  echo "fetching OSM extract (cached) + clipping to state bbox…"
+  # Prefer OSM France's per-state extract (smaller); fall back to the Geofabrik zone extract.
+  local STATE_PBF="$CACHE/$ID.osm.pbf"
+  if [ ! -f "$STATE_PBF" ]; then
+    if curl -sIL --fail "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" >/dev/null 2>&1; then
+      dl "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" "$STATE_PBF"
+    else
+      local ZONE_PBF="$CACHE/$ZONE-latest.osm.pbf"
+      [ -f "$ZONE_PBF" ] || dl "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf" "$ZONE_PBF"
+      STATE_PBF="$ZONE_PBF"
+    fi
+  fi
+  osmium extract -b "$W,$S,$E,$N" "$STATE_PBF" -o "$TMP/cf/region.osm.pbf" -f pbf --overwrite
+
+  local CF="$PWD/$TMP/cf"   # absolute: build commands run with cwd=$CF
+  if [ "${USE_DOCKER_VALHALLA:-0}" = 1 ]; then
+    echo "building Valhalla tiles (Docker)…"
+    docker run --rm --entrypoint bash -v "$CF:/cf" ghcr.io/gis-ops/docker-valhalla/valhalla:latest -lc '
+      set -e; cd /cf
+      valhalla_build_config --mjolnir-tile-dir /cf/t --mjolnir-tile-extract /cf/tiles.tar > v.json
+      valhalla_build_tiles -c v.json region.osm.pbf >/dev/null 2>&1
+      valhalla_build_extract -c v.json -v >/dev/null 2>&1'
+  else
+    echo "building Valhalla tiles (native pyvalhalla)…"
+    local VVENV="$PWD/build-tmp/venv-valhalla"
+    if [ ! -x "$VVENV/bin/python" ]; then
+      local PY; PY=$(find_py312) || { echo "✗ need Python ≥3.12 for pyvalhalla (brew install python@3.14), or rerun with USE_DOCKER_VALHALLA=1"; exit 1; }
+      "$PY" -m venv "$VVENV"
+    fi
+    "$VVENV/bin/pip" install --quiet --disable-pip-version-check pyvalhalla
+    # The bin/ console scripts mis-resolve the C++ exe name; locate the real binaries directly.
+    local VBIN; VBIN="$("$VVENV/bin/python" -m valhalla print_bin_path)"
+    (
+      cd "$CF"
+      "$VVENV/bin/valhalla_build_config" --mjolnir-tile-dir "$CF/t" --mjolnir-tile-extract "$CF/tiles.tar" > v.json
+      "$VBIN/valhalla_build_tiles" -c v.json region.osm.pbf >/dev/null
+      "$VVENV/bin/valhalla_build_extract" -c v.json -v >/dev/null
+    )
+  fi
+  cp "$CF/tiles.tar" "$DIR/tiles.tar"
   rm -rf "$TMP"
-else
-  echo "2/4 Building Valhalla tiles + extract tar (Docker)…"
-  docker run --rm --entrypoint bash -v "$PWD/$TMP/cf:/cf" ghcr.io/gis-ops/docker-valhalla/valhalla:latest -lc '
-    set -e; cd /cf
-    valhalla_build_config --mjolnir-tile-dir /cf/t --mjolnir-tile-extract /cf/tiles.tar > v.json
-    valhalla_build_tiles -c v.json region.osm.pbf >/dev/null 2>&1
-    valhalla_build_extract -c v.json -v >/dev/null 2>&1'
-  cp "$TMP/cf/tiles.tar" "$DIR/tiles.tar"
-  rm -rf "$TMP"
-  echo "    routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
-fi
+  echo "routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
+}
 
-echo "3/4 Building dark + light basemaps…"
-./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ"
+# Prefix a command's output with a tag and stream it live. The function's exit status is the
+# command's (PIPESTATUS[0]), not the `while`'s, so a backgrounded `wait` still sees real failures.
+run_tagged() {  # <tag> <cmd...>
+  local tag="$1"; shift
+  "$@" 2>&1 | while IFS= read -r line; do printf '%s %s\n' "$tag" "$line"; done
+  return "${PIPESTATUS[0]}"
+}
 
-echo "4/4 Writing meta + catalog (large files → GitHub Release)…"
+# Routing and basemap are fully independent (routing reads the OSM pbf; basemap reads the Protomaps
+# planet), so build them concurrently — routing is CPU-bound while the basemap's planet fetch is
+# network-bound, so they overlap well on a multicore Mac.
+echo "1/2 Building routing + basemap in parallel…"
+run_tagged "[route]" build_routing &
+RPID=$!
+run_tagged "[ map ]" ./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ" &
+BPID=$!
+trap 'kill "$RPID" "$BPID" 2>/dev/null || true' EXIT
+RC=0; wait "$RPID" || RC=$?
+BC=0; wait "$BPID" || BC=$?
+trap - EXIT
+[ "$RC" -eq 0 ] || { echo "✗ routing build failed (exit $RC)"; exit 1; }
+[ "$BC" -eq 0 ] || { echo "✗ basemap build failed (exit $BC)"; exit 1; }
+
+echo "2/2 Writing meta + catalog (large files → GitHub Release)…"
 fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
 RMB=$(fsize_mb "$DIR/tiles.tar"); BDMB=$(fsize_mb "$DIR/basemap-dark.mbtiles"); BLMB=$(fsize_mb "$DIR/basemap-light.mbtiles")
 SIZE_MB=$(( RMB + BDMB + BLMB ))
