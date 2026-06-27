@@ -72,9 +72,14 @@ for i in $(seq 1 40); do curl -sf -o /dev/null "http://localhost:8080/styles/dar
 VENV="build-tmp/venv"
 [ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --disable-pip-version-check pillow
-# Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light.
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/dark"
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/light"
+# Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light. Render both in
+# parallel against the single tileserver — they write separate files, so this ~halves the (dominant)
+# render phase on a multicore Mac. The themes' progress lines interleave; the "done:" line names each.
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/dark"  & DPID=$!
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/light" & LPID=$!
+DRC=0; wait "$DPID" || DRC=$?
+LRC=0; wait "$LPID" || LRC=$?
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
+if [ "$DRC" -ne 0 ] || [ "$LRC" -ne 0 ]; then echo "✗ render failed (dark=$DRC light=$LRC)"; exit 1; fi
 rm -rf "$BUILD"
 echo "✅ basemaps → $DIR/basemap-dark.mbtiles ($(du -h "$DIR/basemap-dark.mbtiles" | cut -f1)), $DIR/basemap-light.mbtiles ($(du -h "$DIR/basemap-light.mbtiles" | cut -f1))"
