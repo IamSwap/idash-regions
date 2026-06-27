@@ -4,8 +4,8 @@
     "name": "Goa",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/goa/tiles.tar",
     "basemapDarkURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-dark.mbtiles",
-    "basemapURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-dark.mbtiles",
     "basemapLightURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-light.mbtiles",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-light.mbtiles",
     "version": "2026-06-27",
     "bbox": [
       73.6,

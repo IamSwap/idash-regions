@@ -31,9 +31,11 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     entry = {"id": rid, "name": m.get('name', rid), "routingURL": routing}
     if dark:
         entry["basemapDarkURL"] = dark
-        entry["basemapURL"] = dark        # back-compat for older app builds (single dark basemap)
     if light:
         entry["basemapLightURL"] = light
+    default_basemap = light or dark      # back-compat single basemap → default to light
+    if default_basemap:
+        entry["basemapURL"] = default_basemap
     if m.get('version'):
         entry["version"] = m['version']   # pack build date — app shows "Update" when it changes
     if m.get('bbox'):

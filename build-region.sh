@@ -162,7 +162,8 @@ m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "
 if ru: m["routingURL"] = ru
 if bd: m["basemapDarkURL"] = bd
 if bl: m["basemapLightURL"] = bl
-if bd: m["basemapURL"] = bd        # back-compat: older app builds download a single (dark) basemap
+# back-compat single basemap for older app builds → default to light, fall back to dark
+if bl or bd: m["basemapURL"] = bl or bd
 json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
 PY
 ./gen-catalog.sh
