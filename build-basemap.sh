@@ -40,6 +40,29 @@ done
 cp render/dark.json render/light.json render/config.json "$BUILD/"
 cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
+# Optional contour lines: only when this region has a contours pack (build-contours.sh). Injected
+# into the BUILD copies (source styles stay contour-free, so regions without contours never get a
+# dangling source reference).
+if [ -f "$DIR/contours.pmtiles" ]; then
+  echo "    + injecting contour lines (contours.pmtiles present)"
+  cp "$DIR/contours.pmtiles" "$BUILD/contours.pmtiles"
+  python3 - "$BUILD" <<'PY'
+import json, sys
+b = sys.argv[1]
+cfg = json.load(open(f"{b}/config.json"))
+cfg["data"]["c"] = {"pmtiles": "contours.pmtiles"}
+json.dump(cfg, open(f"{b}/config.json", "w"))
+for style, color in [("dark.json", "#3a4150"), ("light.json", "#b8a98e")]:
+    s = json.load(open(f"{b}/{style}"))
+    layer = {"id": "contour", "type": "line", "source": "c", "source-layer": "contours", "minzoom": 11,
+             "paint": {"line-color": color, "line-opacity": 0.45,
+                       "line-width": ["interpolate", ["linear"], ["zoom"], 11, 0.3, 14, 0.8]}}
+    idx = next((i for i, l in enumerate(s["layers"]) if str(l.get("id", "")).startswith("label-")), len(s["layers"]))
+    s["layers"].insert(idx, layer)   # under labels, over terrain/roads
+    json.dump(s, open(f"{b}/{style}", "w"))
+PY
+fi
+
 echo "3/3 Rendering dark + light raster → mbtiles…"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
 docker run -d --name idash-tsgl -p 8080:8080 -v "$PWD/$BUILD:/data" \
