@@ -95,10 +95,11 @@ BASEMAP_LIGHT_URL=$(publish "$DIR/basemap-light.mbtiles")
 [ -n "$BASEMAP_DARK_URL" ] && rm -f "$DIR/basemap-dark.mbtiles"
 [ -n "$BASEMAP_LIGHT_URL" ] && rm -f "$DIR/basemap-light.mbtiles"
 
-python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_DARK_URL" "$BASEMAP_LIGHT_URL" "$SIZE_MB" <<'PY'
+VERSION="$(date +%Y-%m-%d)"        # pack build date → app shows "Update" when it changes
+python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_DARK_URL" "$BASEMAP_LIGHT_URL" "$SIZE_MB" "$VERSION" <<'PY'
 import json, sys
-id, name, W, S, E, N, ru, bd, bl, size = sys.argv[1:11]
-m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size)}
+id, name, W, S, E, N, ru, bd, bl, size, version = sys.argv[1:12]
+m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size), "version": version}
 if ru: m["routingURL"] = ru
 if bd: m["basemapDarkURL"] = bd
 if bl: m["basemapLightURL"] = bl

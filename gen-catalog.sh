@@ -34,6 +34,8 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
         entry["basemapURL"] = dark        # back-compat for older app builds (single dark basemap)
     if light:
         entry["basemapLightURL"] = light
+    if m.get('version'):
+        entry["version"] = m['version']   # pack build date — app shows "Update" when it changes
     if m.get('bbox'):
         entry["bbox"] = m['bbox']         # [W,S,E,N] — shown on the site + used for route coverage
     if m.get('sizeMB'):
