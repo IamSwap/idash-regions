@@ -1,5 +1,21 @@
 [
   {
+    "id": "goa",
+    "name": "Goa",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/goa/tiles.tar",
+    "basemapDarkURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-dark.mbtiles",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-dark.mbtiles",
+    "basemapLightURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap-light.mbtiles",
+    "version": "2026-06-27",
+    "bbox": [
+      73.6,
+      14.8,
+      74.4,
+      15.8
+    ],
+    "sizeMB": 101
+  },
+  {
     "id": "maharashtra",
     "name": "Maharashtra",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
