@@ -63,6 +63,35 @@ for style, color in [("dark.json", "#3a4150"), ("light.json", "#b8a98e")]:
 PY
 fi
 
+# Local DEM cache: the style's hillshade `dem` source is otherwise fetched per-tile from AWS S3 at
+# render time — the render's dominant stall (cores sit idle on network latency). Pre-download the
+# region's DEM once into a local mbtiles, serve it from tileserver, and repoint the `dem` source at
+# it: ~3x faster render, pixel-identical output. Cached under build-tmp/dem (reused across rebuilds);
+# z0-MAXZ is sufficient (a z12 render needs only z12 DEM). USE_LOCAL_DEM=0 reverts to the AWS source.
+if [ "${USE_LOCAL_DEM:-1}" = 1 ]; then
+  DEMCACHE="build-tmp/dem/${ID}-z${MAXZ}.mbtiles"; mkdir -p build-tmp/dem
+  if [ ! -s "$DEMCACHE" ]; then
+    echo "    pre-caching hillshade DEM (z0-$MAXZ) for bbox…"
+    python3 render/build-dem-cache.py "$DEMCACHE" "$W" "$S" "$E" "$N" 0 "$MAXZ"
+  else
+    echo "    reusing cached DEM ($(du -h "$DEMCACHE" | cut -f1))"
+  fi
+  cp "$DEMCACHE" "$BUILD/dem.mbtiles"
+  python3 - "$BUILD" "$MAXZ" <<'PY'
+import json, sys
+b, maxz = sys.argv[1], int(sys.argv[2])
+cfg = json.load(open(f"{b}/config.json"))
+cfg["data"]["dem"] = {"mbtiles": "dem.mbtiles"}
+cfg["options"]["paths"]["mbtiles"] = "/data"
+json.dump(cfg, open(f"{b}/config.json", "w"))
+for style in ("dark.json", "light.json"):
+    s = json.load(open(f"{b}/{style}"))
+    s["sources"]["dem"] = {"type": "raster-dem", "url": "mbtiles://{dem}",
+                           "encoding": "terrarium", "tileSize": 256, "maxzoom": maxz}
+    json.dump(s, open(f"{b}/{style}", "w"))
+PY
+fi
+
 echo "3/3 Rendering dark + light raster → mbtiles…"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
 docker run -d --name idash-tsgl -p 8080:8080 -v "$PWD/$BUILD:/data" \

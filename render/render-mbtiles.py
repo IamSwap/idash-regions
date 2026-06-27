@@ -11,6 +11,10 @@ out, name = sys.argv[1], sys.argv[2]
 W, S, E, N = map(float, sys.argv[3:7])
 MINZ, MAXZ = int(sys.argv[7]), int(sys.argv[8])
 BASE = sys.argv[9] if len(sys.argv) > 9 else "http://localhost:8080/styles/dark"
+# Tiles spend most of their time blocked on the style's remote DEM (hillshade) fetches, so the
+# renderer is latency-bound, not CPU-bound — more in-flight requests hide that latency. Override
+# with RENDER_WORKERS (two themes render concurrently, so total in-flight ≈ 2× this).
+WORKERS = int(os.environ.get("RENDER_WORKERS", "8"))
 
 
 def lon2x(lon, z): return int((lon + 180.0) / 360.0 * (1 << z))
@@ -59,7 +63,7 @@ for k, v in [("name", name), ("format", "png"), ("type", "baselayer"), ("version
     db.execute("INSERT INTO metadata VALUES (?,?)", (k, v))
 
 done = ok = 0
-with cf.ThreadPoolExecutor(max_workers=8) as ex:
+with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
     for z, x, y, data in ex.map(fetch, tiles):
         done += 1
         if data:
