@@ -6,6 +6,7 @@
     "v": { "pmtiles": "region.pmtiles" }
   },
   "styles": {
-    "dark": { "style": "dark.json" }
+    "dark": { "style": "dark.json" },
+    "light": { "style": "light.json" }
   }
 }

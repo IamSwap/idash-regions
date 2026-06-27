@@ -14,23 +14,32 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     d = os.path.dirname(meta)
     m = json.load(open(meta))
     rid = m['id']
-    tar = os.path.join(d, 'tiles.tar')
-    mb  = os.path.join(d, 'basemap.mbtiles')
+    tar  = os.path.join(d, 'tiles.tar')
+    bd   = os.path.join(d, 'basemap-dark.mbtiles')
+    bl   = os.path.join(d, 'basemap-light.mbtiles')
+    blg  = os.path.join(d, 'basemap.mbtiles')   # legacy single-file pack
 
-    routing = m.get('routingURL') or (f"{base}/packs/{rid}/tiles.tar" if os.path.exists(tar) else None)
+    def local(path, fname):
+        return f"{base}/packs/{rid}/{fname}" if os.path.exists(path) else None
+
+    routing = m.get('routingURL') or local(tar, 'tiles.tar')
     if not routing:                       # routing is required
         continue
-    basemap = m.get('basemapURL') or (f"{base}/packs/{rid}/basemap.mbtiles" if os.path.exists(mb) else None)
+    dark  = m.get('basemapDarkURL')  or local(bd, 'basemap-dark.mbtiles')  or m.get('basemapURL') or local(blg, 'basemap.mbtiles')
+    light = m.get('basemapLightURL') or local(bl, 'basemap-light.mbtiles')
 
     entry = {"id": rid, "name": m.get('name', rid), "routingURL": routing}
-    if basemap:
-        entry["basemapURL"] = basemap
+    if dark:
+        entry["basemapDarkURL"] = dark
+        entry["basemapURL"] = dark        # back-compat for older app builds (single dark basemap)
+    if light:
+        entry["basemapLightURL"] = light
     if m.get('bbox'):
-        entry["bbox"] = m['bbox']         # [W,S,E,N] — shown on the site; ignored by the app
+        entry["bbox"] = m['bbox']         # [W,S,E,N] — shown on the site + used for route coverage
     if m.get('sizeMB'):
         entry["sizeMB"] = m['sizeMB']
     else:
-        size = sum(os.path.getsize(f) for f in (tar, mb) if os.path.exists(f))
+        size = sum(os.path.getsize(f) for f in (tar, bd, bl, blg) if os.path.exists(f))
         if size:
             entry["sizeMB"] = max(1, size // 1_000_000)
     out.append(entry)

@@ -70,15 +70,16 @@ else
   echo "    routing: $(du -h "$DIR/tiles.tar" | cut -f1)"
 fi
 
-echo "3/4 Building dark basemap…"
+echo "3/4 Building dark + light basemaps…"
 ./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ"
 
 echo "4/4 Writing meta + catalog (large files → GitHub Release)…"
 fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
-RMB=$(fsize_mb "$DIR/tiles.tar"); BMB=$(fsize_mb "$DIR/basemap.mbtiles"); SIZE_MB=$(( RMB + BMB ))
-ROUTING_URL=""; BASEMAP_URL=""
+RMB=$(fsize_mb "$DIR/tiles.tar"); BDMB=$(fsize_mb "$DIR/basemap-dark.mbtiles"); BLMB=$(fsize_mb "$DIR/basemap-light.mbtiles")
+SIZE_MB=$(( RMB + BDMB + BLMB ))
 publish() {  # <file> → echoes the release download URL if uploaded, else nothing
   local f="$1" asset; asset="$(basename "$f")"   # release tag ($ID) namespaces the asset
+  [ -f "$f" ] || return 0
   local mb=$(( $(stat -f%z "$f" 2>/dev/null || stat -c%s "$f") / 1000000 ))
   if [ "$mb" -ge "$REL_MB" ]; then
     gh release view "$ID" -R "$REPO" >/dev/null 2>&1 || \
@@ -88,16 +89,20 @@ publish() {  # <file> → echoes the release download URL if uploaded, else noth
   fi
 }
 ROUTING_URL=$(publish "$DIR/tiles.tar")
-BASEMAP_URL=$(publish "$DIR/basemap.mbtiles")
-[ -n "$ROUTING_URL" ] && rm -f "$DIR/tiles.tar"        # hosted on release, don't bloat repo
-[ -n "$BASEMAP_URL" ] && rm -f "$DIR/basemap.mbtiles"
+BASEMAP_DARK_URL=$(publish "$DIR/basemap-dark.mbtiles")
+BASEMAP_LIGHT_URL=$(publish "$DIR/basemap-light.mbtiles")
+[ -n "$ROUTING_URL" ] && rm -f "$DIR/tiles.tar"             # hosted on release, don't bloat repo
+[ -n "$BASEMAP_DARK_URL" ] && rm -f "$DIR/basemap-dark.mbtiles"
+[ -n "$BASEMAP_LIGHT_URL" ] && rm -f "$DIR/basemap-light.mbtiles"
 
-python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_URL" "$SIZE_MB" <<'PY'
+python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_DARK_URL" "$BASEMAP_LIGHT_URL" "$SIZE_MB" <<'PY'
 import json, sys
-id, name, W, S, E, N, ru, bu, size = sys.argv[1:10]
+id, name, W, S, E, N, ru, bd, bl, size = sys.argv[1:11]
 m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size)}
 if ru: m["routingURL"] = ru
-if bu: m["basemapURL"] = bu
+if bd: m["basemapDarkURL"] = bd
+if bl: m["basemapLightURL"] = bl
+if bd: m["basemapURL"] = bd        # back-compat: older app builds download a single (dark) basemap
 json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
 PY
 ./gen-catalog.sh

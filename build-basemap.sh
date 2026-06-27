@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
-# Build a region's offline dark raster BASEMAP (.mbtiles) by self-rendering Protomaps vector
-# tiles — no OSM raster scraping (that's blocked), no API key.
+# Build a region's offline raster BASEMAPs (dark + light .mbtiles) by self-rendering Protomaps
+# vector tiles — no OSM raster scraping (that's blocked), no API key. Two themed packs let the dash
+# follow the app's Day/Night theme. Hillshade relief comes from AWS terrain-tiles (needs internet
+# at build time; the style's `dem` source).
 #
 #   Protomaps planet .pmtiles ──pmtiles extract (ranged)──▶ region vector tiles
-#     ──tileserver-gl + render/dark.json──▶ dark PNGs ──render-mbtiles.py──▶ basemap.mbtiles
+#     ──tileserver-gl + render/{dark,light}.json (+ DEM hillshade)──▶ PNGs
+#     ──render-mbtiles.py──▶ basemap-dark.mbtiles + basemap-light.mbtiles
 #
 # Usage:  ./build-basemap.sh <id> "<Name>" <W> <S> <E> <N> [maxzoom]
 # Requires: pmtiles (brew install pmtiles), docker (running), python3 + pillow.
@@ -34,10 +37,10 @@ for attempt in 1 2 3 4 5; do
   echo "    extract attempt $attempt failed (transient?) — retrying…"; sleep 5
   [ "$attempt" = 5 ] && { echo "extract failed after 5 attempts"; exit 1; }
 done
-cp render/dark.json render/config.json "$BUILD/"
+cp render/dark.json render/light.json render/config.json "$BUILD/"
 cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
-echo "3/3 Rendering dark raster → mbtiles…"
+echo "3/3 Rendering dark + light raster → mbtiles…"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
 docker run -d --name idash-tsgl -p 8080:8080 -v "$PWD/$BUILD:/data" \
   maptiler/tileserver-gl:latest --config /data/config.json >/dev/null
@@ -46,7 +49,9 @@ for i in $(seq 1 40); do curl -sf -o /dev/null "http://localhost:8080/styles/dar
 VENV="build-tmp/venv"
 [ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --disable-pip-version-check pillow
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ"
+# Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light.
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/dark"
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/light"
 docker rm -f idash-tsgl >/dev/null 2>&1 || true
 rm -rf "$BUILD"
-echo "✅ basemap → $DIR/basemap.mbtiles ($(du -h "$DIR/basemap.mbtiles" | cut -f1))"
+echo "✅ basemaps → $DIR/basemap-dark.mbtiles ($(du -h "$DIR/basemap-dark.mbtiles" | cut -f1)), $DIR/basemap-light.mbtiles ($(du -h "$DIR/basemap-light.mbtiles" | cut -f1))"

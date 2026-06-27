@@ -3,6 +3,7 @@
     "id": "maharashtra",
     "name": "Maharashtra",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
+    "basemapDarkURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap.mbtiles",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap.mbtiles",
     "bbox": [
       72.6,
