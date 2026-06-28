@@ -285,6 +285,21 @@
     "sizeMB": 645
   },
   {
+    "id": "manipur",
+    "name": "Manipur",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/manipur/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/manipur/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      92.9,
+      23.8,
+      94.8,
+      25.7
+    ],
+    "sizeMB": 30
+  },
+  {
     "id": "meghalaya",
     "name": "Meghalaya",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/meghalaya/tiles.tar",

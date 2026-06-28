@@ -1,0 +1,13 @@
+{
+  "id": "manipur",
+  "name": "Manipur",
+  "bbox": [
+    92.9,
+    23.8,
+    94.8,
+    25.7
+  ],
+  "sizeMB": 30,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}
