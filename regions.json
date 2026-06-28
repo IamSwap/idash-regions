@@ -22,13 +22,13 @@
     "basemapDarkURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-dark.mbtiles",
     "basemapLightURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-light.mbtiles",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-light.mbtiles",
-    "version": "2026-06-27",
+    "version": "2026-06-28",
     "bbox": [
       72.6,
       15.6,
       80.9,
       22.1
     ],
-    "sizeMB": 1745
+    "sizeMB": 2947
   }
 ]
