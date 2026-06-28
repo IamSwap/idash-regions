@@ -1,0 +1,13 @@
+{
+  "id": "arunachal-pradesh",
+  "name": "Arunachal Pradesh",
+  "bbox": [
+    91.6,
+    26.6,
+    97.5,
+    29.5
+  ],
+  "sizeMB": 83,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

@@ -30,6 +30,21 @@
     "sizeMB": 980
   },
   {
+    "id": "arunachal-pradesh",
+    "name": "Arunachal Pradesh",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/arunachal-pradesh/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/arunachal-pradesh/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      91.6,
+      26.6,
+      97.5,
+      29.5
+    ],
+    "sizeMB": 83
+  },
+  {
     "id": "assam",
     "name": "Assam",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/assam/tiles.tar",
