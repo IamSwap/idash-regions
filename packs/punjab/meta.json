@@ -1,0 +1,15 @@
+{
+  "id": "punjab",
+  "name": "Punjab",
+  "bbox": [
+    73.9,
+    29.5,
+    76.9,
+    32.6
+  ],
+  "sizeMB": 280,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/punjab/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/punjab/basemap.pmtiles"
+}
