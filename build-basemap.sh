@@ -5,11 +5,14 @@
 # at build time; the style's `dem` source).
 #
 #   Protomaps planet .pmtiles ──pmtiles extract (ranged)──▶ region vector tiles
-#     ──tileserver-gl + render/{dark,light}.json (+ DEM hillshade)──▶ PNGs
+#     ──tileserver(-rs|-gl) + render/{dark,light}.json (+ DEM hillshade)──▶ PNGs
 #     ──render-mbtiles.py──▶ basemap-dark.mbtiles + basemap-light.mbtiles
 #
 # Usage:  ./build-basemap.sh <id> "<Name>" <W> <S> <E> <N> [maxzoom]
-# Requires: pmtiles (brew install pmtiles), docker (running), python3 + pillow.
+# Renderer (RENDERER env): defaults to native `tileserver-rs` when on PATH (no Docker), else
+# Dockerized `tileserver-gl`; force with RENDERER=docker|tileserver-rs. Requires: pmtiles, python3 +
+# pillow, and a renderer (tileserver-rs binary, or docker running). MINIMAL=1 (default) strips
+# hillshade/landcover for small flat packs; USE_LOCAL_DEM, RENDER_PORT also apply.
 set -euo pipefail
 if [ "$#" -lt 6 ]; then echo "usage: $0 <id> \"<Name>\" <W> <S> <E> <N> [maxzoom]"; exit 1; fi
 ID="$1"; NAME="$2"; W="$3"; S="$4"; E="$5"; N="$6"; MAXZ="${7:-12}"; MINZ=5
@@ -141,42 +144,60 @@ VENV="build-tmp/venv"
 [ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --disable-pip-version-check pillow
 
-# Renderer backend. Default: Dockerized tileserver-gl (CPU software GL) — rock-solid at any size.
-# NATIVE_RENDER=1: native tileserver-gl via npm — GPU-backed macOS GL, faster, no Docker. Same
-# renderer, but its headless GL stack leaks on the heavy (hillshade/landcover) style and slows over a
-# long run; the MINIMAL default doesn't trigger that, so native is the sweet spot for minimal packs.
-# For MINIMAL=0 across a whole state, prefer Docker (steady).
-if [ "${NATIVE_RENDER:-0}" = 1 ]; then
-  echo "    backend: native tileserver-gl :$PORT (NATIVE_RENDER=1)"
-  TSGL="$PWD/build-tmp/tileserver-gl"
-  if [ ! -x "$TSGL/node_modules/.bin/tileserver-gl" ]; then
-    echo "    installing tileserver-gl once (needs: brew install pkg-config cairo pango libpng jpeg giflib librsvg harfbuzz)…"
-    mkdir -p "$TSGL"; ( cd "$TSGL" && npm init -y >/dev/null 2>&1 && npm install --no-fund --no-audit --silent tileserver-gl )
-  fi
-  # Native resolves config paths from its working dir, not Docker's /data mount — make them relative.
+# Renderer backend. Default: native tileserver-rs (patched Metal build, no Docker) when its binary is
+# on PATH; otherwise Dockerized tileserver-gl (portable, no local binary). Force with
+# RENDERER=docker|tileserver-rs. Both serve /styles/<id>/{z}/{x}/{y}[suffix].png.
+TSRS_BIN="$(command -v tileserver-rs || true)"
+RENDERER="${RENDERER:-$([ -n "$TSRS_BIN" ] && echo tileserver-rs || echo docker)}"
+if [ "$RENDERER" = tileserver-rs ]; then
+  [ -n "$TSRS_BIN" ] || { echo "✗ RENDERER=tileserver-rs but no tileserver-rs on PATH (cargo build + install it)"; exit 1; }
+  echo "    backend: tileserver-rs :$PORT (native Metal)"
+  # tileserver-rs auto-detects sources by filename and resolves style sources via /data/<id> (not
+  # pmtiles://). Name the vector source "v" and rewrite styles to local /data URLs (*.style.json).
+  cp "$BUILD/region.pmtiles" "$BUILD/v.pmtiles"
   python3 - "$BUILD" <<'PY'
 import json, sys
-b = sys.argv[1]; cfg = json.load(open(f"{b}/config.json"))
-cfg["options"]["paths"] = {"root": ".", "styles": ".", "pmtiles": ".", "mbtiles": ".", "fonts": "fonts"}
-json.dump(cfg, open(f"{b}/config.json", "w"))
+b = sys.argv[1]
+for st in ("dark.json", "light.json"):
+    s = json.load(open(f"{b}/{st}"))
+    s["sources"]["v"] = {"type": "vector", "url": "/data/v"}
+    dem = s.get("sources", {}).get("dem")
+    if dem:
+        s["sources"]["dem"] = {"type": "raster-dem", "url": "/data/dem", "encoding": "terrarium",
+                               "tileSize": 256, "maxzoom": dem.get("maxzoom", 13)}
+    json.dump(s, open(f"{b}/{st.replace('.json', '.style.json')}", "w"))
 PY
-  ( cd "$BUILD" && exec "$TSGL/node_modules/.bin/tileserver-gl" --config config.json -p "$PORT" ) > "build-tmp/tsgl-$ID.log" 2>&1 &
+  ( cd "$BUILD" && exec "$TSRS_BIN" . -p "$PORT" ) > "build-tmp/tsrs-$ID.log" 2>&1 &
   TSPID=$!
   stop_render() { kill "$TSPID" 2>/dev/null || true; }
+  SUFFIX=""              # tileserver-rs renders a 512px base tile (no @2x)
+  PARALLEL=0             # 2 themes on one shared worker pool thrash the per-worker style cache —
+                         # rendering them sequentially (each pass keeps its style loaded) is faster.
 else
+  echo "    backend: Dockerized tileserver-gl :$PORT"
   docker rm -f idash-tsgl >/dev/null 2>&1 || true
   docker run -d --name idash-tsgl -p "$PORT:8080" -v "$PWD/$BUILD:/data" \
     maptiler/tileserver-gl:latest --config /data/config.json >/dev/null
   stop_render() { docker rm -f idash-tsgl >/dev/null 2>&1 || true; }
+  SUFFIX="@2x"           # tileserver-gl base tile is 256px → @2x yields 512px
+  PARALLEL=1             # tileserver-gl handles concurrent dark+light fine
 fi
 for i in $(seq 1 60); do curl -sf -o /dev/null "http://localhost:$PORT/styles/dark/0/0/0.png" && break; sleep 1; done
 # Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light. Render both in
 # parallel against the single tileserver — they write separate files, so this ~halves the render
 # phase on a multicore Mac. The themes' progress lines interleave; the "done:" line names each.
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:$PORT/styles/dark"  & DPID=$!
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:$PORT/styles/light" & LPID=$!
-DRC=0; wait "$DPID" || DRC=$?
-LRC=0; wait "$LPID" || LRC=$?
+render_one() {  # <out> <style>
+  RENDER_SUFFIX="$SUFFIX" "$VENV/bin/python" render/render-mbtiles.py "$1" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:$PORT/styles/$2"
+}
+if [ "${PARALLEL:-1}" = 1 ]; then
+  render_one "$DIR/basemap-dark.mbtiles"  dark  & DPID=$!
+  render_one "$DIR/basemap-light.mbtiles" light & LPID=$!
+  DRC=0; wait "$DPID" || DRC=$?
+  LRC=0; wait "$LPID" || LRC=$?
+else
+  DRC=0; render_one "$DIR/basemap-dark.mbtiles"  dark  || DRC=$?
+  LRC=0; render_one "$DIR/basemap-light.mbtiles" light || LRC=$?
+fi
 stop_render
 if [ "$DRC" -ne 0 ] || [ "$LRC" -ne 0 ]; then echo "✗ render failed (dark=$DRC light=$LRC)"; exit 1; fi
 rm -rf "$BUILD"

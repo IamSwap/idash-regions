@@ -15,6 +15,9 @@ BASE = sys.argv[9] if len(sys.argv) > 9 else "http://localhost:8080/styles/dark"
 # renderer is latency-bound, not CPU-bound — more in-flight requests hide that latency. Override
 # with RENDER_WORKERS (two themes render concurrently, so total in-flight ≈ 2× this).
 WORKERS = int(os.environ.get("RENDER_WORKERS", "8"))
+# Tile-path suffix for the requested pixel size. tileserver-gl's base tile is 256px, so "@2x" yields
+# 512px; tileserver-rs renders a 512px base, so it wants no suffix. Override with RENDER_SUFFIX.
+SUFFIX = os.environ.get("RENDER_SUFFIX", "@2x")
 
 
 def lon2x(lon, z): return int((lon + 180.0) / 360.0 * (1 << z))
@@ -36,7 +39,7 @@ def jobs():
 def fetch(job):
     z, x, y = job
     try:
-        with urllib.request.urlopen(f"{BASE}/{z}/{x}/{y}@2x.png", timeout=30) as r:
+        with urllib.request.urlopen(f"{BASE}/{z}/{x}/{y}{SUFFIX}.png", timeout=30) as r:
             raw = r.read()
         # Quantize: these flat dark tiles have few colors, so an 8-bit palette shrinks
         # them ~4x with no visible loss — keeps state-size packs small.
