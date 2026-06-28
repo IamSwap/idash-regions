@@ -1,5 +1,20 @@
 [
   {
+    "id": "andhra-pradesh",
+    "name": "Andhra Pradesh",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/andhra-pradesh/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/andhra-pradesh/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      76.7,
+      12.6,
+      84.8,
+      19.9
+    ],
+    "sizeMB": 980
+  },
+  {
     "id": "goa",
     "name": "Goa",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/goa/tiles.tar",
