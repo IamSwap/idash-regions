@@ -315,6 +315,21 @@
     "sizeMB": 36
   },
   {
+    "id": "mizoram",
+    "name": "Mizoram",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/mizoram/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/mizoram/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      92.2,
+      21.9,
+      93.5,
+      24.6
+    ],
+    "sizeMB": 26
+  },
+  {
     "id": "odisha",
     "name": "Odisha",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/tiles.tar",
