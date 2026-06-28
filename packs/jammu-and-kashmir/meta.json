@@ -1,0 +1,15 @@
+{
+  "id": "jammu-and-kashmir",
+  "name": "Jammu and Kashmir",
+  "bbox": [
+    73.0,
+    32.2,
+    80.0,
+    35.5
+  ],
+  "sizeMB": 147,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/basemap.pmtiles"
+}

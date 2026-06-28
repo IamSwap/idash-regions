@@ -120,6 +120,21 @@
     "sizeMB": 210
   },
   {
+    "id": "jammu-and-kashmir",
+    "name": "Jammu and Kashmir",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      73.0,
+      32.2,
+      80.0,
+      35.5
+    ],
+    "sizeMB": 147
+  },
+  {
     "id": "karnataka",
     "name": "Karnataka",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/karnataka/tiles.tar",
