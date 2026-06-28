@@ -10,9 +10,10 @@
 #
 # Routing (native pyvalhalla) and the basemap (Docker tileserver-gl) are built in parallel.
 # Artifacts over 50 MB are uploaded as GitHub Release assets (tag = region id) and the catalog
-# points at the release URLs, so the repo stays small. Requires: osmium-tool, pmtiles, gh (release
-# upload), Python ≥3.12 (pyvalhalla), and docker (basemap render; also routing if
-# USE_DOCKER_VALHALLA=1). REL_MB=50 by default.
+# points at the release URLs, so the repo stays small. The build then commits the meta + catalog and
+# pushes (so GitHub Pages deploys) automatically — set PUSH=0 to stop after building.
+# Requires: osmium-tool, pmtiles, gh (release upload), Python ≥3.12 (pyvalhalla), and docker (basemap
+# render; also routing if USE_DOCKER_VALHALLA=1). REL_MB=50 by default.
 set -euo pipefail
 cd "$(dirname "$0")"
 REL_MB="${REL_MB:-50}"
@@ -167,4 +168,20 @@ if bl or bd: m["basemapURL"] = bl or bd
 json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
 PY
 ./gen-catalog.sh
-echo "✅ $NAME built. git add/commit/push to publish."
+
+# Auto-publish: large artifacts are already on the GitHub Release (publish() above); now commit the
+# pack dir (meta.json + any small packs served from Pages) and the catalog, and push so Pages deploys.
+# PUSH=0 to stop after building (commit/push by hand).
+if [ "${PUSH:-1}" = 1 ]; then
+  echo "Publishing: committing meta + catalog and pushing…"
+  git add "$DIR" regions.json
+  if git diff --cached --quiet; then
+    echo "✅ $NAME built — no catalog changes to push."
+  else
+    git commit -q -m "Publish $NAME pack ($VERSION)"
+    git push origin HEAD
+    echo "✅ $NAME published → pushed to origin/$(git rev-parse --abbrev-ref HEAD); GitHub Pages will deploy."
+  fi
+else
+  echo "✅ $NAME built. PUSH=0 — git add/commit/push to publish."
+fi
