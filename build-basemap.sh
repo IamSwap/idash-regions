@@ -115,22 +115,59 @@ PY
 fi
 
 echo "3/3 Rendering dark + light raster → mbtiles…"
-docker rm -f idash-tsgl >/dev/null 2>&1 || true
-docker run -d --name idash-tsgl -p 8080:8080 -v "$PWD/$BUILD:/data" \
-  maptiler/tileserver-gl:latest --config /data/config.json >/dev/null
-for i in $(seq 1 40); do curl -sf -o /dev/null "http://localhost:8080/styles/dark/0/0/0.png" && break; sleep 1; done
+PORT="${RENDER_PORT:-8080}"
+# Glyphs are baked at :8080 in the source styles; repoint them at our actual render port so labels
+# load regardless of backend/port.
+python3 - "$BUILD" "$PORT" <<'PY'
+import json, sys
+b, port = sys.argv[1], int(sys.argv[2])
+for st in ("dark.json", "light.json"):
+    s = json.load(open(f"{b}/{st}"))
+    s["glyphs"] = f"http://localhost:{port}/fonts/{{fontstack}}/{{range}}.pbf"
+    json.dump(s, open(f"{b}/{st}", "w"))
+PY
 # Self-contained Pillow (system python3 may lack it / be externally-managed).
 VENV="build-tmp/venv"
 [ -x "$VENV/bin/python" ] || python3 -m venv "$VENV"
 "$VENV/bin/pip" install --quiet --disable-pip-version-check pillow
+
+# Renderer backend. Default: Dockerized tileserver-gl (CPU software GL) — rock-solid at any size.
+# NATIVE_RENDER=1: native tileserver-gl via npm — GPU-backed macOS GL, faster, no Docker. Same
+# renderer, but its headless GL stack leaks on the heavy (hillshade/landcover) style and slows over a
+# long run; the MINIMAL default doesn't trigger that, so native is the sweet spot for minimal packs.
+# For MINIMAL=0 across a whole state, prefer Docker (steady).
+if [ "${NATIVE_RENDER:-0}" = 1 ]; then
+  echo "    backend: native tileserver-gl :$PORT (NATIVE_RENDER=1)"
+  TSGL="$PWD/build-tmp/tileserver-gl"
+  if [ ! -x "$TSGL/node_modules/.bin/tileserver-gl" ]; then
+    echo "    installing tileserver-gl once (needs: brew install pkg-config cairo pango libpng jpeg giflib librsvg harfbuzz)…"
+    mkdir -p "$TSGL"; ( cd "$TSGL" && npm init -y >/dev/null 2>&1 && npm install --no-fund --no-audit --silent tileserver-gl )
+  fi
+  # Native resolves config paths from its working dir, not Docker's /data mount — make them relative.
+  python3 - "$BUILD" <<'PY'
+import json, sys
+b = sys.argv[1]; cfg = json.load(open(f"{b}/config.json"))
+cfg["options"]["paths"] = {"root": ".", "styles": ".", "pmtiles": ".", "mbtiles": ".", "fonts": "fonts"}
+json.dump(cfg, open(f"{b}/config.json", "w"))
+PY
+  ( cd "$BUILD" && exec "$TSGL/node_modules/.bin/tileserver-gl" --config config.json -p "$PORT" ) > "build-tmp/tsgl-$ID.log" 2>&1 &
+  TSPID=$!
+  stop_render() { kill "$TSPID" 2>/dev/null || true; }
+else
+  docker rm -f idash-tsgl >/dev/null 2>&1 || true
+  docker run -d --name idash-tsgl -p "$PORT:8080" -v "$PWD/$BUILD:/data" \
+    maptiler/tileserver-gl:latest --config /data/config.json >/dev/null
+  stop_render() { docker rm -f idash-tsgl >/dev/null 2>&1 || true; }
+fi
+for i in $(seq 1 60); do curl -sf -o /dev/null "http://localhost:$PORT/styles/dark/0/0/0.png" && break; sleep 1; done
 # Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light. Render both in
-# parallel against the single tileserver — they write separate files, so this ~halves the (dominant)
-# render phase on a multicore Mac. The themes' progress lines interleave; the "done:" line names each.
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/dark"  & DPID=$!
-"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:8080/styles/light" & LPID=$!
+# parallel against the single tileserver — they write separate files, so this ~halves the render
+# phase on a multicore Mac. The themes' progress lines interleave; the "done:" line names each.
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-dark.mbtiles"  "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:$PORT/styles/dark"  & DPID=$!
+"$VENV/bin/python" render/render-mbtiles.py "$DIR/basemap-light.mbtiles" "$NAME" "$W" "$S" "$E" "$N" "$MINZ" "$MAXZ" "http://localhost:$PORT/styles/light" & LPID=$!
 DRC=0; wait "$DPID" || DRC=$?
 LRC=0; wait "$LPID" || LRC=$?
-docker rm -f idash-tsgl >/dev/null 2>&1 || true
+stop_render
 if [ "$DRC" -ne 0 ] || [ "$LRC" -ne 0 ]; then echo "✗ render failed (dark=$DRC light=$LRC)"; exit 1; fi
 rm -rf "$BUILD"
 echo "✅ basemaps → $DIR/basemap-dark.mbtiles ($(du -h "$DIR/basemap-dark.mbtiles" | cut -f1)), $DIR/basemap-light.mbtiles ($(du -h "$DIR/basemap-light.mbtiles" | cut -f1))"
