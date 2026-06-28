@@ -1,0 +1,15 @@
+{
+  "id": "madhya-pradesh",
+  "name": "Madhya Pradesh",
+  "bbox": [
+    74.0,
+    21.0,
+    82.8,
+    26.9
+  ],
+  "sizeMB": 670,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/madhya-pradesh/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/madhya-pradesh/basemap.pmtiles"
+}
