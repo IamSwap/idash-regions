@@ -1,12 +1,12 @@
 # id	name	geofabrik-zone	W	S	E	N	maxzoom
-maharashtra	Maharashtra	western-zone	72.6	15.6	80.9	22.1	12
-goa	Goa	western-zone	73.6	14.8	74.4	15.8	13
-gujarat	Gujarat	western-zone	68.1	20.0	74.5	24.7	12
-karnataka	Karnataka	southern-zone	74.0	11.5	78.6	18.5	12
-kerala	Kerala	southern-zone	74.8	8.2	77.5	12.8	12
-tamil-nadu	Tamil Nadu	southern-zone	76.2	8.0	80.4	13.6	12
-telangana	Telangana	southern-zone	77.2	15.8	81.4	19.9	12
-rajasthan	Rajasthan	northern-zone	69.4	23.0	78.3	30.2	12
-himachal-pradesh	Himachal Pradesh	northern-zone	75.5	30.3	79.1	33.3	12
-uttarakhand	Uttarakhand	northern-zone	77.5	28.7	81.1	31.5	12
-ladakh	Ladakh	northern-zone	75.8	32.2	80.4	36.0	11
+maharashtra	Maharashtra	western-zone	72.6	15.6	80.9	22.1	14
+goa	Goa	western-zone	73.6	14.8	74.4	15.8	14
+gujarat	Gujarat	western-zone	68.1	20.0	74.5	24.7	14
+karnataka	Karnataka	southern-zone	74.0	11.5	78.6	18.5	14
+kerala	Kerala	southern-zone	74.8	8.2	77.5	12.8	14
+tamil-nadu	Tamil Nadu	southern-zone	76.2	8.0	80.4	13.6	14
+telangana	Telangana	southern-zone	77.2	15.8	81.4	19.9	14
+rajasthan	Rajasthan	northern-zone	69.4	23.0	78.3	30.2	14
+himachal-pradesh	Himachal Pradesh	northern-zone	75.5	30.3	79.1	33.3	14
+uttarakhand	Uttarakhand	northern-zone	77.5	28.7	81.1	31.5	14
+ladakh	Ladakh	northern-zone	75.8	32.2	80.4	36.0	14

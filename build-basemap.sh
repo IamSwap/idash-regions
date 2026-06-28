@@ -40,10 +40,31 @@ done
 cp render/dark.json render/light.json render/config.json "$BUILD/"
 cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
+# Minimal basemap (default): a flat earth + water + roads + boundaries + road/place labels, with the
+# hillshade relief and landcover/landuse/buildings fills stripped out. These spartan tiles quantize
+# to very few colours and compress hard, so the pack can render to the nav zoom (z14) at a fraction
+# of the size. MINIMAL=0 keeps the full styled basemap (terrain relief, landcover) — bigger, nicer
+# for mountains. Done on the BUILD copies so the source styles stay full.
+if [ "${MINIMAL:-1}" = 1 ]; then
+  echo "    minimal style: stripping hillshade + landcover/landuse/buildings (MINIMAL=0 keeps them)"
+  python3 - "$BUILD" <<'PY'
+import json, sys
+b = sys.argv[1]
+drop = {"lc-farmland", "lc-wood", "lc-grass", "lc-sand", "lc-barren", "lc-wetland", "lc-glacier",
+        "landuse-green", "landuse-builtup", "buildings"}
+for style in ("dark.json", "light.json"):
+    s = json.load(open(f"{b}/{style}"))
+    s["layers"] = [l for l in s["layers"]
+                   if l.get("id") not in drop and l.get("type") != "hillshade"]
+    s.get("sources", {}).pop("dem", None)
+    json.dump(s, open(f"{b}/{style}", "w"))
+PY
+fi
+
 # Optional contour lines: only when this region has a contours pack (build-contours.sh). Injected
 # into the BUILD copies (source styles stay contour-free, so regions without contours never get a
-# dangling source reference).
-if [ -f "$DIR/contours.pmtiles" ]; then
+# dangling source reference). Skipped in minimal mode (contours are terrain detail + extra bytes).
+if [ "${MINIMAL:-1}" != 1 ] && [ -f "$DIR/contours.pmtiles" ]; then
   echo "    + injecting contour lines (contours.pmtiles present)"
   cp "$DIR/contours.pmtiles" "$BUILD/contours.pmtiles"
   python3 - "$BUILD" <<'PY'
@@ -68,7 +89,8 @@ fi
 # region's DEM once into a local mbtiles, serve it from tileserver, and repoint the `dem` source at
 # it: ~3x faster render, pixel-identical output. Cached under build-tmp/dem (reused across rebuilds);
 # z0-MAXZ is sufficient (a z12 render needs only z12 DEM). USE_LOCAL_DEM=0 reverts to the AWS source.
-if [ "${USE_LOCAL_DEM:-1}" = 1 ]; then
+# Skipped in minimal mode — there's no hillshade layer to feed.
+if [ "${MINIMAL:-1}" != 1 ] && [ "${USE_LOCAL_DEM:-1}" = 1 ]; then
   DEMCACHE="build-tmp/dem/${ID}-z${MAXZ}.mbtiles"; mkdir -p build-tmp/dem
   if [ ! -s "$DEMCACHE" ]; then
     echo "    pre-caching hillshade DEM (z0-$MAXZ) for bbox…"
