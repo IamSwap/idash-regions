@@ -1,0 +1,15 @@
+{
+  "id": "chhattisgarh",
+  "name": "Chhattisgarh",
+  "bbox": [
+    80.2,
+    17.7,
+    84.4,
+    24.2
+  ],
+  "sizeMB": 179,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/chhattisgarh/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/chhattisgarh/basemap.pmtiles"
+}

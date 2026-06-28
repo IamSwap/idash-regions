@@ -45,6 +45,21 @@
     "sizeMB": 9
   },
   {
+    "id": "chhattisgarh",
+    "name": "Chhattisgarh",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/chhattisgarh/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/chhattisgarh/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      80.2,
+      17.7,
+      84.4,
+      24.2
+    ],
+    "sizeMB": 179
+  },
+  {
     "id": "dadra-and-nagar-haveli-and-daman-and-diu",
     "name": "Dadra and Nagar Haveli and Daman and Diu",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/tiles.tar",
