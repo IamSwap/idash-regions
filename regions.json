@@ -120,6 +120,21 @@
     "sizeMB": 645
   },
   {
+    "id": "puducherry",
+    "name": "Puducherry",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/puducherry/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/puducherry/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      79.7,
+      10.8,
+      79.9,
+      12.0
+    ],
+    "sizeMB": 14
+  },
+  {
     "id": "rajasthan",
     "name": "Rajasthan",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/rajasthan/tiles.tar",

@@ -1,0 +1,13 @@
+{
+  "id": "puducherry",
+  "name": "Puducherry",
+  "bbox": [
+    79.7,
+    10.8,
+    79.9,
+    12.0
+  ],
+  "sizeMB": 14,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}
