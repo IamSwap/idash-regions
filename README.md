@@ -1,12 +1,11 @@
-# iDash Offline Regions
+# DashMate Offline Regions
 
-Catalog + hosting for [iDash](https://github.com/IamSwap/iDash) offline map/routing packs, served
-as a static **GitHub Pages** site. The app fetches `regions.json` and downloads the packs it lists.
-Regions are **Indian states**.
+Catalog + hosting for DashMate offline map/routing packs, served as a static **GitHub Pages** site.
+The app fetches `regions.json` and downloads the packs it lists. Regions are **Indian states**.
 
 - **Browse page:** https://iamswap.github.io/idash-regions/
 - **Catalog (set this in the app):** https://iamswap.github.io/idash-regions/regions.json
-  — iDash → Settings → Offline maps → Region catalog → paste → Load.
+  — DashMate → Settings → Offline maps → Region catalog → paste → Load.
 
 Each region pack is two parts: **routing** (Valhalla tiles, for offline turn-by-turn) and a
 **basemap** (dark raster `.mbtiles`, the map drawn under the route). Both are optional per region,
