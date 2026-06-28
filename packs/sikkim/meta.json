@@ -1,0 +1,13 @@
+{
+  "id": "sikkim",
+  "name": "Sikkim",
+  "bbox": [
+    88.0,
+    27.0,
+    88.9,
+    28.2
+  ],
+  "sizeMB": 16,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

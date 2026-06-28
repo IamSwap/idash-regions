@@ -345,6 +345,21 @@
     "sizeMB": 541
   },
   {
+    "id": "sikkim",
+    "name": "Sikkim",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/sikkim/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/sikkim/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      88.0,
+      27.0,
+      88.9,
+      28.2
+    ],
+    "sizeMB": 16
+  },
+  {
     "id": "tamil-nadu",
     "name": "Tamil Nadu",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/tiles.tar",
