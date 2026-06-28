@@ -1,0 +1,13 @@
+{
+  "id": "dadra-and-nagar-haveli-and-daman-and-diu",
+  "name": "Dadra and Nagar Haveli and Daman and Diu",
+  "bbox": [
+    70.9,
+    20.1,
+    73.2,
+    20.8
+  ],
+  "sizeMB": 9,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

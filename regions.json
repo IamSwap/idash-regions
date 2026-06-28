@@ -45,6 +45,21 @@
     "sizeMB": 9
   },
   {
+    "id": "dadra-and-nagar-haveli-and-daman-and-diu",
+    "name": "Dadra and Nagar Haveli and Daman and Diu",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      70.9,
+      20.1,
+      73.2,
+      20.8
+    ],
+    "sizeMB": 9
+  },
+  {
     "id": "delhi",
     "name": "Delhi",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/delhi/tiles.tar",
