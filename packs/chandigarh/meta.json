@@ -1,0 +1,13 @@
+{
+  "id": "chandigarh",
+  "name": "Chandigarh",
+  "bbox": [
+    76.7,
+    30.6,
+    76.9,
+    30.8
+  ],
+  "sizeMB": 9,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}
