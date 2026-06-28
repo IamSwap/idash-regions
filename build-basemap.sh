@@ -128,7 +128,16 @@ PY
 fi
 
 echo "3/3 Rendering dark + light raster → mbtiles…"
-PORT="${RENDER_PORT:-8080}"
+# Pick a free port (don't hardcode 8080 — it's often taken, e.g. by Laravel Herd's php). Override
+# with RENDER_PORT. Rendering against the wrong service silently produced empty packs before.
+PORT="${RENDER_PORT:-}"
+if [ -z "$PORT" ]; then
+  for p in $(seq 8080 8099); do
+    lsof -nP -iTCP:"$p" -sTCP:LISTEN >/dev/null 2>&1 || { PORT="$p"; break; }
+  done
+  [ -n "$PORT" ] || { echo "✗ no free port in 8080-8099"; exit 1; }
+fi
+echo "    render port: $PORT"
 # Glyphs are baked at :8080 in the source styles; repoint them at our actual render port so labels
 # load regardless of backend/port.
 python3 - "$BUILD" "$PORT" <<'PY'
@@ -182,7 +191,9 @@ else
   SUFFIX="@2x"           # tileserver-gl base tile is 256px → @2x yields 512px
   PARALLEL=1             # tileserver-gl handles concurrent dark+light fine
 fi
-for i in $(seq 1 60); do curl -sf -o /dev/null "http://localhost:$PORT/styles/dark/0/0/0.png" && break; sleep 1; done
+ready=0
+for i in $(seq 1 60); do curl -sf -o /dev/null "http://localhost:$PORT/styles/dark/0/0/0.png" && { ready=1; break; }; sleep 1; done
+[ "$ready" = 1 ] || { echo "✗ renderer never became ready on :$PORT (see build-tmp/tsrs-$ID.log / docker logs)"; stop_render; exit 1; }
 # Two themed packs (the dash picks one by day/night): basemap-dark / basemap-light. Render both in
 # parallel against the single tileserver — they write separate files, so this ~halves the render
 # phase on a multicore Mac. The themes' progress lines interleave; the "done:" line names each.

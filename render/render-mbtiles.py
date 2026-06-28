@@ -81,3 +81,10 @@ db.commit()
 db.execute("VACUUM")
 db.close()
 print(f"done: {ok}/{len(tiles)} tiles → {out} ({os.path.getsize(out)//1024} KB)")
+
+# Fail loudly so the build aborts instead of publishing an empty pack: 0 tiles means the renderer
+# was unreachable/broken (e.g. wrong port), and any large shortfall means something went wrong.
+if tiles and ok < max(1, int(len(tiles) * 0.99)):
+    print(f"ERROR: only {ok}/{len(tiles)} tiles rendered — refusing to ship an incomplete pack",
+          file=sys.stderr)
+    sys.exit(1)
