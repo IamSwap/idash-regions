@@ -7,10 +7,9 @@
     80.9,
     22.1
   ],
-  "sizeMB": 2947,
+  "sizeMB": 645,
   "version": "2026-06-28",
+  "basemapFormat": "pbf",
   "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
-  "basemapDarkURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-dark.mbtiles",
-  "basemapLightURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-light.mbtiles",
-  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap-light.mbtiles"
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/basemap.pmtiles"
 }
