@@ -1,0 +1,15 @@
+{
+  "id": "odisha",
+  "name": "Odisha",
+  "bbox": [
+    81.3,
+    17.8,
+    87.5,
+    22.6
+  ],
+  "sizeMB": 170,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/basemap.pmtiles"
+}

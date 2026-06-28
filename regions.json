@@ -285,6 +285,21 @@
     "sizeMB": 645
   },
   {
+    "id": "odisha",
+    "name": "Odisha",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      81.3,
+      17.8,
+      87.5,
+      22.6
+    ],
+    "sizeMB": 170
+  },
+  {
     "id": "puducherry",
     "name": "Puducherry",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/puducherry/tiles.tar",
