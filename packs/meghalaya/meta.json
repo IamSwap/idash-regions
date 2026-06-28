@@ -1,0 +1,13 @@
+{
+  "id": "meghalaya",
+  "name": "Meghalaya",
+  "bbox": [
+    89.8,
+    25.0,
+    92.8,
+    26.1
+  ],
+  "sizeMB": 36,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

@@ -285,6 +285,21 @@
     "sizeMB": 645
   },
   {
+    "id": "meghalaya",
+    "name": "Meghalaya",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/meghalaya/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/meghalaya/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      89.8,
+      25.0,
+      92.8,
+      26.1
+    ],
+    "sizeMB": 36
+  },
+  {
     "id": "odisha",
     "name": "Odisha",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/tiles.tar",
