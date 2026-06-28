@@ -75,6 +75,21 @@
     "sizeMB": 645
   },
   {
+    "id": "rajasthan",
+    "name": "Rajasthan",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/rajasthan/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/rajasthan/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      69.4,
+      23.0,
+      78.3,
+      30.2
+    ],
+    "sizeMB": 541
+  },
+  {
     "id": "tamil-nadu",
     "name": "Tamil Nadu",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/tiles.tar",

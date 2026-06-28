@@ -1,0 +1,15 @@
+{
+  "id": "rajasthan",
+  "name": "Rajasthan",
+  "bbox": [
+    69.4,
+    23.0,
+    78.3,
+    30.2
+  ],
+  "sizeMB": 541,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/rajasthan/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/rajasthan/basemap.pmtiles"
+}
