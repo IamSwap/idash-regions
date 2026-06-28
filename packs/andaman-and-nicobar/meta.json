@@ -1,0 +1,13 @@
+{
+  "id": "andaman-and-nicobar",
+  "name": "Andaman and Nicobar Islands",
+  "bbox": [
+    92.2,
+    6.7,
+    94.3,
+    13.7
+  ],
+  "sizeMB": 8,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

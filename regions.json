@@ -1,5 +1,20 @@
 [
   {
+    "id": "andaman-and-nicobar",
+    "name": "Andaman and Nicobar Islands",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/andaman-and-nicobar/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/andaman-and-nicobar/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      92.2,
+      6.7,
+      94.3,
+      13.7
+    ],
+    "sizeMB": 8
+  },
+  {
     "id": "andhra-pradesh",
     "name": "Andhra Pradesh",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/andhra-pradesh/tiles.tar",
