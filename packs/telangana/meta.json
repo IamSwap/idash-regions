@@ -1,0 +1,15 @@
+{
+  "id": "telangana",
+  "name": "Telangana",
+  "bbox": [
+    77.2,
+    15.8,
+    81.4,
+    19.9
+  ],
+  "sizeMB": 319,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/telangana/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/telangana/basemap.pmtiles"
+}
