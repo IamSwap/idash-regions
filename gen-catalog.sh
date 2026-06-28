@@ -17,7 +17,8 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     tar  = os.path.join(d, 'tiles.tar')
     bd   = os.path.join(d, 'basemap-dark.mbtiles')
     bl   = os.path.join(d, 'basemap-light.mbtiles')
-    blg  = os.path.join(d, 'basemap.mbtiles')   # legacy single-file pack
+    blg  = os.path.join(d, 'basemap.mbtiles')   # legacy single-file raster pack
+    bvec = os.path.join(d, 'basemap.pmtiles')   # theme-independent vector pack
 
     def local(path, fname):
         return f"{base}/packs/{rid}/{fname}" if os.path.exists(path) else None
@@ -25,17 +26,24 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     routing = m.get('routingURL') or local(tar, 'tiles.tar')
     if not routing:                       # routing is required
         continue
-    dark  = m.get('basemapDarkURL')  or local(bd, 'basemap-dark.mbtiles')  or m.get('basemapURL') or local(blg, 'basemap.mbtiles')
-    light = m.get('basemapLightURL') or local(bl, 'basemap-light.mbtiles')
 
     entry = {"id": rid, "name": m.get('name', rid), "routingURL": routing}
-    if dark:
-        entry["basemapDarkURL"] = dark
-    if light:
-        entry["basemapLightURL"] = light
-    default_basemap = light or dark      # back-compat single basemap → default to light
-    if default_basemap:
-        entry["basemapURL"] = default_basemap
+
+    # Vector pack: one theme-independent basemap.pmtiles, styled per day/night in the app.
+    vector = (m.get('basemapURL') if m.get('basemapFormat') == 'pbf' else None) or local(bvec, 'basemap.pmtiles')
+    if m.get('basemapFormat') == 'pbf' or (vector and os.path.exists(bvec)):
+        entry["basemapURL"] = vector
+        entry["basemapFormat"] = "pbf"
+    else:
+        dark  = m.get('basemapDarkURL')  or local(bd, 'basemap-dark.mbtiles')  or m.get('basemapURL') or local(blg, 'basemap.mbtiles')
+        light = m.get('basemapLightURL') or local(bl, 'basemap-light.mbtiles')
+        if dark:
+            entry["basemapDarkURL"] = dark
+        if light:
+            entry["basemapLightURL"] = light
+        default_basemap = light or dark      # back-compat single basemap → default to light
+        if default_basemap:
+            entry["basemapURL"] = default_basemap
     if m.get('version'):
         entry["version"] = m['version']   # pack build date — app shows "Update" when it changes
     if m.get('bbox'):
@@ -43,7 +51,7 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     if m.get('sizeMB'):
         entry["sizeMB"] = m['sizeMB']
     else:
-        size = sum(os.path.getsize(f) for f in (tar, bd, bl, blg) if os.path.exists(f))
+        size = sum(os.path.getsize(f) for f in (tar, bd, bl, blg, bvec) if os.path.exists(f))
         if size:
             entry["sizeMB"] = max(1, size // 1_000_000)
     out.append(entry)

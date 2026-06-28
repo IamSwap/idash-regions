@@ -135,8 +135,13 @@ trap - EXIT
 
 echo "2/2 Writing meta + catalog (large files → GitHub Release)…"
 fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
-RMB=$(fsize_mb "$DIR/tiles.tar"); BDMB=$(fsize_mb "$DIR/basemap-dark.mbtiles"); BLMB=$(fsize_mb "$DIR/basemap-light.mbtiles")
-SIZE_MB=$(( RMB + BDMB + BLMB ))
+RMB=$(fsize_mb "$DIR/tiles.tar")
+if [ "${VECTOR:-0}" = 1 ]; then
+  BVMB=$(fsize_mb "$DIR/basemap.pmtiles"); SIZE_MB=$(( RMB + BVMB ))
+else
+  BDMB=$(fsize_mb "$DIR/basemap-dark.mbtiles"); BLMB=$(fsize_mb "$DIR/basemap-light.mbtiles")
+  SIZE_MB=$(( RMB + BDMB + BLMB ))
+fi
 publish() {  # <file> → echoes the release download URL if uploaded, else nothing
   local f="$1" asset; asset="$(basename "$f")"   # release tag ($ID) namespaces the asset
   [ -f "$f" ] || return 0
@@ -149,14 +154,28 @@ publish() {  # <file> → echoes the release download URL if uploaded, else noth
   fi
 }
 ROUTING_URL=$(publish "$DIR/tiles.tar")
-BASEMAP_DARK_URL=$(publish "$DIR/basemap-dark.mbtiles")
-BASEMAP_LIGHT_URL=$(publish "$DIR/basemap-light.mbtiles")
 [ -n "$ROUTING_URL" ] && rm -f "$DIR/tiles.tar"             # hosted on release, don't bloat repo
-[ -n "$BASEMAP_DARK_URL" ] && rm -f "$DIR/basemap-dark.mbtiles"
-[ -n "$BASEMAP_LIGHT_URL" ] && rm -f "$DIR/basemap-light.mbtiles"
-
 VERSION="$(date +%Y-%m-%d)"        # pack build date → app shows "Update" when it changes
-python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_DARK_URL" "$BASEMAP_LIGHT_URL" "$SIZE_MB" "$VERSION" <<'PY'
+
+if [ "${VECTOR:-0}" = 1 ]; then
+  # One theme-independent vector pack (basemap.pmtiles); the app styles it per day/night in code.
+  BASEMAP_URL=$(publish "$DIR/basemap.pmtiles")
+  [ -n "$BASEMAP_URL" ] && rm -f "$DIR/basemap.pmtiles"
+  python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_URL" "$SIZE_MB" "$VERSION" <<'PY'
+import json, sys
+id, name, W, S, E, N, ru, bv, size, version = sys.argv[1:11]
+m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size),
+     "version": version, "basemapFormat": "pbf"}
+if ru: m["routingURL"] = ru
+if bv: m["basemapURL"] = bv
+json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
+PY
+else
+  BASEMAP_DARK_URL=$(publish "$DIR/basemap-dark.mbtiles")
+  BASEMAP_LIGHT_URL=$(publish "$DIR/basemap-light.mbtiles")
+  [ -n "$BASEMAP_DARK_URL" ] && rm -f "$DIR/basemap-dark.mbtiles"
+  [ -n "$BASEMAP_LIGHT_URL" ] && rm -f "$DIR/basemap-light.mbtiles"
+  python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_DARK_URL" "$BASEMAP_LIGHT_URL" "$SIZE_MB" "$VERSION" <<'PY'
 import json, sys
 id, name, W, S, E, N, ru, bd, bl, size, version = sys.argv[1:12]
 m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size), "version": version}
@@ -167,6 +186,7 @@ if bl: m["basemapLightURL"] = bl
 if bl or bd: m["basemapURL"] = bl or bd
 json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
 PY
+fi
 ./gen-catalog.sh
 
 # Auto-publish: large artifacts are already on the GitHub Release (publish() above); now commit the

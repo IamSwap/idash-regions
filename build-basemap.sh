@@ -50,6 +50,17 @@ else
   done
   cp "$BUILD/region.pmtiles" "$PMCACHE"
 fi
+# Vector pack mode (VECTOR=1): ship the region's vector tiles directly as one theme-independent
+# basemap.pmtiles instead of self-rendering raster — ~10-50x smaller and crisp at any zoom (the app
+# draws it with Core Graphics from the on-device PMTiles). Skips the whole tileserver/DEM/render path
+# below. The planet extract above already produced region.pmtiles, so this is just a copy.
+if [ "${VECTOR:-0}" = 1 ]; then
+  cp "$BUILD/region.pmtiles" "$DIR/basemap.pmtiles"
+  rm -rf "$BUILD"
+  echo "✅ vector basemap → $DIR/basemap.pmtiles ($(du -h "$DIR/basemap.pmtiles" | cut -f1))"
+  exit 0
+fi
+
 cp render/dark.json render/light.json render/config.json "$BUILD/"
 cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
