@@ -21,22 +21,32 @@ cd "$(dirname "$0")"
 DIR="packs/$ID"; mkdir -p "$DIR"
 BUILD="build-tmp/$ID-basemap"; rm -rf "$BUILD"; mkdir -p "$BUILD"
 
-echo "1/3 Locating latest Protomaps planet build…"
-PLANET=""
-for i in $(seq 0 16); do
-  d=$(date -v-${i}d +%Y%m%d 2>/dev/null || date -d "-$i day" +%Y%m%d)
-  code=$(curl -s --max-time 15 -o /dev/null -w "%{http_code}" -r 0-0 "https://build.protomaps.com/$d.pmtiles" || true)
-  if [ "$code" = "206" ] || [ "$code" = "200" ]; then PLANET="https://build.protomaps.com/$d.pmtiles"; break; fi
-done
-[ -n "$PLANET" ] || { echo "no Protomaps planet build found in last 16 days"; exit 1; }
-echo "    planet: $PLANET"
+# Region vector tiles are cached across rebuilds (keyed by id + extract zoom) — the planet extract
+# is the dominant cost of a minimal build (network), and rebuilds are usually for a style/version
+# bump, not fresher map data. Delete the cache file (or build-tmp/pmtiles) to force a fresh pull.
+PMCACHE="build-tmp/pmtiles/${ID}-z${VMAXZ}.pmtiles"; mkdir -p build-tmp/pmtiles
+if [ -s "$PMCACHE" ]; then
+  echo "1/3 Reusing cached region vector tiles ($(du -h "$PMCACHE" | cut -f1)) — skipping planet extract."
+  cp "$PMCACHE" "$BUILD/region.pmtiles"
+else
+  echo "1/3 Locating latest Protomaps planet build…"
+  PLANET=""
+  for i in $(seq 0 16); do
+    d=$(date -v-${i}d +%Y%m%d 2>/dev/null || date -d "-$i day" +%Y%m%d)
+    code=$(curl -s --max-time 15 -o /dev/null -w "%{http_code}" -r 0-0 "https://build.protomaps.com/$d.pmtiles" || true)
+    if [ "$code" = "206" ] || [ "$code" = "200" ]; then PLANET="https://build.protomaps.com/$d.pmtiles"; break; fi
+  done
+  [ -n "$PLANET" ] || { echo "no Protomaps planet build found in last 16 days"; exit 1; }
+  echo "    planet: $PLANET"
 
-echo "2/3 Extracting region vector tiles (z0-$VMAXZ; raster renders to z$MAXZ)…"
-for attempt in 1 2 3 4 5; do
-  if pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$VMAXZ"; then break; fi
-  echo "    extract attempt $attempt failed (transient?) — retrying…"; sleep 5
-  [ "$attempt" = 5 ] && { echo "extract failed after 5 attempts"; exit 1; }
-done
+  echo "2/3 Extracting region vector tiles (z0-$VMAXZ; raster renders to z$MAXZ)…"
+  for attempt in 1 2 3 4 5; do
+    if pmtiles extract "$PLANET" "$BUILD/region.pmtiles" --bbox="$W,$S,$E,$N" --minzoom=0 --maxzoom="$VMAXZ"; then break; fi
+    echo "    extract attempt $attempt failed (transient?) — retrying…"; sleep 5
+    [ "$attempt" = 5 ] && { echo "extract failed after 5 attempts"; exit 1; }
+  done
+  cp "$BUILD/region.pmtiles" "$PMCACHE"
+fi
 cp render/dark.json render/light.json render/config.json "$BUILD/"
 cp -R render/fonts "$BUILD/fonts"   # Noto Sans Regular glyphs for labels (mounted at /data/fonts)
 
