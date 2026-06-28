@@ -1,0 +1,15 @@
+{
+  "id": "west-bengal",
+  "name": "West Bengal",
+  "bbox": [
+    85.8,
+    21.4,
+    89.9,
+    27.3
+  ],
+  "sizeMB": 581,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/west-bengal/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/west-bengal/basemap.pmtiles"
+}
