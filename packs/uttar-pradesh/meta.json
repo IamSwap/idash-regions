@@ -1,0 +1,15 @@
+{
+  "id": "uttar-pradesh",
+  "name": "Uttar Pradesh",
+  "bbox": [
+    77.0,
+    23.8,
+    84.7,
+    30.5
+  ],
+  "sizeMB": 506,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/uttar-pradesh/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/uttar-pradesh/basemap.pmtiles"
+}
