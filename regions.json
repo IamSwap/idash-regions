@@ -330,6 +330,21 @@
     "sizeMB": 26
   },
   {
+    "id": "nagaland",
+    "name": "Nagaland",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/nagaland/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/nagaland/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      93.3,
+      25.2,
+      95.8,
+      27.0
+    ],
+    "sizeMB": 27
+  },
+  {
     "id": "odisha",
     "name": "Odisha",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/odisha/tiles.tar",

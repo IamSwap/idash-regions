@@ -1,0 +1,13 @@
+{
+  "id": "nagaland",
+  "name": "Nagaland",
+  "bbox": [
+    93.3,
+    25.2,
+    95.8,
+    27.0
+  ],
+  "sizeMB": 27,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}
