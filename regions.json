@@ -90,6 +90,21 @@
     "sizeMB": 358
   },
   {
+    "id": "haryana",
+    "name": "Haryana",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/haryana/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/haryana/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      74.4,
+      27.6,
+      77.6,
+      30.9
+    ],
+    "sizeMB": 288
+  },
+  {
     "id": "himachal-pradesh",
     "name": "Himachal Pradesh",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/himachal-pradesh/tiles.tar",

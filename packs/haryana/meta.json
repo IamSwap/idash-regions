@@ -1,0 +1,15 @@
+{
+  "id": "haryana",
+  "name": "Haryana",
+  "bbox": [
+    74.4,
+    27.6,
+    77.6,
+    30.9
+  ],
+  "sizeMB": 288,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/haryana/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/haryana/basemap.pmtiles"
+}
