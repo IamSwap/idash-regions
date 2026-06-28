@@ -1,0 +1,15 @@
+{
+  "id": "himachal-pradesh",
+  "name": "Himachal Pradesh",
+  "bbox": [
+    75.5,
+    30.3,
+    79.1,
+    33.3
+  ],
+  "sizeMB": 210,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/himachal-pradesh/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/himachal-pradesh/basemap.pmtiles"
+}
