@@ -15,6 +15,21 @@
     "sizeMB": 24
   },
   {
+    "id": "kerala",
+    "name": "Kerala",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/kerala/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/kerala/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      74.8,
+      8.2,
+      77.5,
+      12.8
+    ],
+    "sizeMB": 286
+  },
+  {
     "id": "maharashtra",
     "name": "Maharashtra",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",

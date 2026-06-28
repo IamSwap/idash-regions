@@ -1,0 +1,15 @@
+{
+  "id": "kerala",
+  "name": "Kerala",
+  "bbox": [
+    74.8,
+    8.2,
+    77.5,
+    12.8
+  ],
+  "sizeMB": 286,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/kerala/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/kerala/basemap.pmtiles"
+}
