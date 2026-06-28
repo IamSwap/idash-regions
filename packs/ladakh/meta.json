@@ -1,0 +1,13 @@
+{
+  "id": "ladakh",
+  "name": "Ladakh",
+  "bbox": [
+    75.8,
+    32.2,
+    80.4,
+    36.0
+  ],
+  "sizeMB": 41,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}

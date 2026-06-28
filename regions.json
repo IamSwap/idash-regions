@@ -75,6 +75,21 @@
     "sizeMB": 286
   },
   {
+    "id": "ladakh",
+    "name": "Ladakh",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/ladakh/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/ladakh/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      75.8,
+      32.2,
+      80.4,
+      36.0
+    ],
+    "sizeMB": 41
+  },
+  {
     "id": "maharashtra",
     "name": "Maharashtra",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/maharashtra/tiles.tar",
