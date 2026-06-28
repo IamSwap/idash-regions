@@ -73,5 +73,20 @@
       22.1
     ],
     "sizeMB": 645
+  },
+  {
+    "id": "tamil-nadu",
+    "name": "Tamil Nadu",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      76.2,
+      8.0,
+      80.4,
+      13.6
+    ],
+    "sizeMB": 915
   }
 ]
