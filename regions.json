@@ -133,5 +133,20 @@
       19.9
     ],
     "sizeMB": 319
+  },
+  {
+    "id": "uttarakhand",
+    "name": "Uttarakhand",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/uttarakhand/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/uttarakhand/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      77.5,
+      28.7,
+      81.1,
+      31.5
+    ],
+    "sizeMB": 137
   }
 ]
