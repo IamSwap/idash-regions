@@ -1,0 +1,15 @@
+{
+  "id": "jharkhand",
+  "name": "Jharkhand",
+  "bbox": [
+    83.3,
+    21.9,
+    87.9,
+    25.4
+  ],
+  "sizeMB": 153,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/jharkhand/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/jharkhand/basemap.pmtiles"
+}
