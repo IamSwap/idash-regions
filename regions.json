@@ -30,6 +30,21 @@
     "sizeMB": 980
   },
   {
+    "id": "bihar",
+    "name": "Bihar",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/bihar/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/bihar/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      83.2,
+      24.2,
+      88.3,
+      27.6
+    ],
+    "sizeMB": 427
+  },
+  {
     "id": "chandigarh",
     "name": "Chandigarh",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/chandigarh/tiles.tar",

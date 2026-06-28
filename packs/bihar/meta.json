@@ -1,0 +1,15 @@
+{
+  "id": "bihar",
+  "name": "Bihar",
+  "bbox": [
+    83.2,
+    24.2,
+    88.3,
+    27.6
+  ],
+  "sizeMB": 427,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/bihar/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/bihar/basemap.pmtiles"
+}
