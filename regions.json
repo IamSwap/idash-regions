@@ -405,6 +405,21 @@
     "sizeMB": 319
   },
   {
+    "id": "tripura",
+    "name": "Tripura",
+    "routingURL": "https://iamswap.github.io/idash-regions/packs/tripura/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/tripura/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      91.1,
+      22.9,
+      92.4,
+      24.6
+    ],
+    "sizeMB": 25
+  },
+  {
     "id": "uttar-pradesh",
     "name": "Uttar Pradesh",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/uttar-pradesh/tiles.tar",

@@ -1,0 +1,13 @@
+{
+  "id": "tripura",
+  "name": "Tripura",
+  "bbox": [
+    91.1,
+    22.9,
+    92.4,
+    24.6
+  ],
+  "sizeMB": 25,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf"
+}
