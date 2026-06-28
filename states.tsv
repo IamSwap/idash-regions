@@ -2,11 +2,36 @@
 maharashtra	Maharashtra	western-zone	72.6	15.6	80.9	22.1	14
 goa	Goa	western-zone	73.6	14.8	74.4	15.8	14
 gujarat	Gujarat	western-zone	68.1	20.0	74.5	24.7	14
+dadra-and-nagar-haveli-and-daman-and-diu	Dadra and Nagar Haveli and Daman and Diu	western-zone	70.9	20.1	73.2	20.8	14
 karnataka	Karnataka	southern-zone	74.0	11.5	78.6	18.5	14
 kerala	Kerala	southern-zone	74.8	8.2	77.5	12.8	14
 tamil-nadu	Tamil Nadu	southern-zone	76.2	8.0	80.4	13.6	14
 telangana	Telangana	southern-zone	77.2	15.8	81.4	19.9	14
+andhra-pradesh	Andhra Pradesh	southern-zone	76.7	12.6	84.8	19.9	14
+puducherry	Puducherry	southern-zone	79.7	10.8	79.9	12.0	14
+andaman-and-nicobar	Andaman and Nicobar Islands	southern-zone	92.2	6.7	94.3	13.7	14
+lakshadweep	Lakshadweep	southern-zone	71.6	8.2	74.0	12.4	14
 rajasthan	Rajasthan	northern-zone	69.4	23.0	78.3	30.2	14
 himachal-pradesh	Himachal Pradesh	northern-zone	75.5	30.3	79.1	33.3	14
 uttarakhand	Uttarakhand	northern-zone	77.5	28.7	81.1	31.5	14
 ladakh	Ladakh	northern-zone	75.8	32.2	80.4	36.0	14
+jammu-and-kashmir	Jammu and Kashmir	northern-zone	73.0	32.2	80.0	35.5	14
+punjab	Punjab	northern-zone	73.9	29.5	76.9	32.6	14
+haryana	Haryana	northern-zone	74.4	27.6	77.6	30.9	14
+chandigarh	Chandigarh	northern-zone	76.7	30.6	76.9	30.8	14
+delhi	Delhi	northern-zone	76.8	28.4	77.4	28.9	14
+uttar-pradesh	Uttar Pradesh	northern-zone	77.0	23.8	84.7	30.5	14
+madhya-pradesh	Madhya Pradesh	central-zone	74.0	21.0	82.8	26.9	14
+chhattisgarh	Chhattisgarh	central-zone	80.2	17.7	84.4	24.2	14
+bihar	Bihar	eastern-zone	83.2	24.2	88.3	27.6	14
+jharkhand	Jharkhand	eastern-zone	83.3	21.9	87.9	25.4	14
+odisha	Odisha	eastern-zone	81.3	17.8	87.5	22.6	14
+west-bengal	West Bengal	eastern-zone	85.8	21.4	89.9	27.3	14
+sikkim	Sikkim	north-eastern-zone	88.0	27.0	88.9	28.2	14
+assam	Assam	north-eastern-zone	89.6	24.1	96.1	28.3	14
+arunachal-pradesh	Arunachal Pradesh	north-eastern-zone	91.6	26.6	97.5	29.5	14
+nagaland	Nagaland	north-eastern-zone	93.3	25.2	95.8	27.0	14
+manipur	Manipur	north-eastern-zone	92.9	23.8	94.8	25.7	14
+mizoram	Mizoram	north-eastern-zone	92.2	21.9	93.5	24.6	14
+tripura	Tripura	north-eastern-zone	91.1	22.9	92.4	24.6	14
+meghalaya	Meghalaya	north-eastern-zone	89.8	25.0	92.8	26.1	14
