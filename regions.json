@@ -30,6 +30,21 @@
     "sizeMB": 980
   },
   {
+    "id": "delhi",
+    "name": "Delhi",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/delhi/tiles.tar",
+    "basemapURL": "https://iamswap.github.io/idash-regions/packs/delhi/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      76.8,
+      28.4,
+      77.4,
+      28.9
+    ],
+    "sizeMB": 107
+  },
+  {
     "id": "goa",
     "name": "Goa",
     "routingURL": "https://iamswap.github.io/idash-regions/packs/goa/tiles.tar",
