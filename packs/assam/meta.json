@@ -1,0 +1,15 @@
+{
+  "id": "assam",
+  "name": "Assam",
+  "bbox": [
+    89.6,
+    24.1,
+    96.1,
+    28.3
+  ],
+  "sizeMB": 200,
+  "version": "2026-06-28",
+  "basemapFormat": "pbf",
+  "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/assam/tiles.tar",
+  "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/assam/basemap.pmtiles"
+}

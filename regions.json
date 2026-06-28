@@ -30,6 +30,21 @@
     "sizeMB": 980
   },
   {
+    "id": "assam",
+    "name": "Assam",
+    "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/assam/tiles.tar",
+    "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/assam/basemap.pmtiles",
+    "basemapFormat": "pbf",
+    "version": "2026-06-28",
+    "bbox": [
+      89.6,
+      24.1,
+      96.1,
+      28.3
+    ],
+    "sizeMB": 200
+  },
+  {
     "id": "bihar",
     "name": "Bihar",
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/bihar/tiles.tar",
