@@ -11,7 +11,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-ID="$1"; NAME="$2"; W="$3"; S="$4"; E="$5"; N="$6"
+ID="$1"; NAME="$2"; W="$3"; S="$4"; E="$5"; N="$6"; ZONE="${7:-}"
 DIR="packs/$ID"; mkdir -p "$DIR"
 TMP="build-tmp/$ID-search"; rm -rf "$TMP"; mkdir -p "$TMP"
 CACHE="build-tmp/zones"; mkdir -p "$CACHE"
@@ -29,8 +29,13 @@ STATE_PBF="$CACHE/$ID.osm.pbf"
 if [ ! -f "$STATE_PBF" ]; then
   if curl -sIL --fail "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" >/dev/null 2>&1; then
     dl "https://download.openstreetmap.fr/extracts/asia/india/$ID.osm.pbf" "$STATE_PBF"
+  elif [ -n "$ZONE" ]; then
+    # Fall back to the Geofabrik zone extract (cached by build-region.sh), clipped to the state bbox.
+    ZONE_PBF="$CACHE/$ZONE-latest.osm.pbf"
+    [ -f "$ZONE_PBF" ] || dl "https://download.geofabrik.de/asia/india/$ZONE-latest.osm.pbf" "$ZONE_PBF"
+    STATE_PBF="$ZONE_PBF"
   else
-    echo "✗ no cached/openstreetmap.fr extract for '$ID'; run build-region.sh first (it caches the zone pbf)"; exit 1
+    echo "✗ no extract for '$ID' (no cached/openstreetmap.fr, and no zone given)"; exit 1
   fi
 fi
 
