@@ -19,6 +19,7 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
     bl   = os.path.join(d, 'basemap-light.mbtiles')
     blg  = os.path.join(d, 'basemap.mbtiles')   # legacy single-file raster pack
     bvec = os.path.join(d, 'basemap.pmtiles')   # theme-independent vector pack
+    srch = os.path.join(d, 'search.sqlite')     # offline place-search index (FTS5)
 
     def local(path, fname):
         return f"{base}/packs/{rid}/{fname}" if os.path.exists(path) else None
@@ -44,6 +45,11 @@ for meta in sorted(glob.glob('packs/*/meta.json')):
         default_basemap = light or dark      # back-compat single basemap → default to light
         if default_basemap:
             entry["basemapURL"] = default_basemap
+    # Offline place-search index (FTS5 SQLite); the app downloads it for offline destination search.
+    search = m.get('searchURL') or local(srch, 'search.sqlite')
+    if search:
+        entry["searchURL"] = search
+        entry["searchFormat"] = m.get('searchFormat', 'fts')
     if m.get('version'):
         entry["version"] = m['version']   # pack build date — app shows "Update" when it changes
     if m.get('bbox'):

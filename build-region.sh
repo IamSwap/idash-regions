@@ -121,22 +121,26 @@ run_tagged() {  # <tag> <cmd...>
 # Routing and basemap are fully independent (routing reads the OSM pbf; basemap reads the Protomaps
 # planet), so build them concurrently — routing is CPU-bound while the basemap's planet fetch is
 # network-bound, so they overlap well on a multicore Mac.
-echo "1/2 Building routing + basemap in parallel…"
+echo "1/2 Building routing + basemap + search in parallel…"
 run_tagged "[route]" build_routing &
 RPID=$!
 run_tagged "[ map ]" ./build-basemap.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" "$MAXZ" &
 BPID=$!
-trap 'kill "$RPID" "$BPID" 2>/dev/null || true' EXIT
+run_tagged "[srch]" ./build-search.sh "$ID" "$NAME" "$W" "$S" "$E" "$N" &
+SPID=$!
+trap 'kill "$RPID" "$BPID" "$SPID" 2>/dev/null || true' EXIT
 RC=0; wait "$RPID" || RC=$?
 BC=0; wait "$BPID" || BC=$?
+SC=0; wait "$SPID" || SC=$?
 trap - EXIT
 [ "$RC" -eq 0 ] || { echo "✗ routing build failed (exit $RC)"; exit 1; }
 [ "$BC" -eq 0 ] || { echo "✗ basemap build failed (exit $BC)"; exit 1; }
+[ "$SC" -eq 0 ] || { echo "✗ search build failed (exit $SC)"; exit 1; }
 
 echo "2/2 Writing meta + catalog (large files → GitHub Release)…"
 fsize_mb() { echo $(( ( $(stat -f%z "$1" 2>/dev/null || stat -c%s "$1") + 999999 ) / 1000000 )); }
-RMB=$(fsize_mb "$DIR/tiles.tar"); BVMB=$(fsize_mb "$DIR/basemap.pmtiles")
-SIZE_MB=$(( RMB + BVMB ))
+RMB=$(fsize_mb "$DIR/tiles.tar"); BVMB=$(fsize_mb "$DIR/basemap.pmtiles"); SMB=$(fsize_mb "$DIR/search.sqlite")
+SIZE_MB=$(( RMB + BVMB + SMB ))
 publish() {  # <file> → echoes the release download URL if uploaded, else nothing
   local f="$1" asset; asset="$(basename "$f")"   # release tag ($ID) namespaces the asset
   [ -f "$f" ] || return 0
@@ -155,13 +159,18 @@ VERSION="$(date +%Y-%m-%d)"        # pack build date → app shows "Update" when
 # One theme-independent vector pack (basemap.pmtiles); the app styles it per day/night in code.
 BASEMAP_URL=$(publish "$DIR/basemap.pmtiles")
 [ -n "$BASEMAP_URL" ] && rm -f "$DIR/basemap.pmtiles"
-python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_URL" "$SIZE_MB" "$VERSION" <<'PY'
+# Offline place-search index (search.sqlite, FTS5). Small (~0.1-a-few MB) → usually served from Pages.
+SEARCH_URL=$(publish "$DIR/search.sqlite")
+[ -n "$SEARCH_URL" ] && rm -f "$DIR/search.sqlite"
+python3 - "$ID" "$NAME" "$W" "$S" "$E" "$N" "$ROUTING_URL" "$BASEMAP_URL" "$SEARCH_URL" "$SIZE_MB" "$VERSION" <<'PY'
 import json, sys
-id, name, W, S, E, N, ru, bv, size, version = sys.argv[1:11]
+id, name, W, S, E, N, ru, bv, su, size, version = sys.argv[1:12]
 m = {"id": id, "name": name, "bbox": [float(W), float(S), float(E), float(N)], "sizeMB": int(size),
      "version": version, "basemapFormat": "pbf"}
 if ru: m["routingURL"] = ru
 if bv: m["basemapURL"] = bv
+if su: m["searchURL"] = su
+m["searchFormat"] = "fts"
 json.dump(m, open(f"packs/{id}/meta.json", "w"), indent=2)
 PY
 ./gen-catalog.sh
