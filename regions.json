@@ -5,6 +5,8 @@
     "routingURL": "https://iamswap.github.io/idash-regions/packs/andaman-and-nicobar/tiles.tar",
     "basemapURL": "https://iamswap.github.io/idash-regions/packs/andaman-and-nicobar/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/andaman-and-nicobar/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       92.2,
@@ -20,6 +22,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/andhra-pradesh/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/andhra-pradesh/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/andhra-pradesh/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       76.7,
@@ -35,6 +39,8 @@
     "routingURL": "https://iamswap.github.io/idash-regions/packs/arunachal-pradesh/tiles.tar",
     "basemapURL": "https://iamswap.github.io/idash-regions/packs/arunachal-pradesh/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/arunachal-pradesh/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       91.6,
@@ -118,6 +124,8 @@
     "routingURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/tiles.tar",
     "basemapURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/dadra-and-nagar-haveli-and-daman-and-diu/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       70.9,
@@ -133,6 +141,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/delhi/tiles.tar",
     "basemapURL": "https://iamswap.github.io/idash-regions/packs/delhi/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/delhi/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       76.8,
@@ -199,6 +209,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/himachal-pradesh/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/himachal-pradesh/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/himachal-pradesh/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       75.5,
@@ -214,6 +226,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/jammu-and-kashmir/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/jammu-and-kashmir/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       73.0,
@@ -314,6 +328,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/madhya-pradesh/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/madhya-pradesh/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/madhya-pradesh/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       74.0,
@@ -499,6 +515,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/tamil-nadu/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/tamil-nadu/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       76.2,
@@ -548,6 +566,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/uttar-pradesh/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/uttar-pradesh/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/uttar-pradesh/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       77.0,
@@ -580,6 +600,8 @@
     "routingURL": "https://github.com/IamSwap/idash-regions/releases/download/west-bengal/tiles.tar",
     "basemapURL": "https://github.com/IamSwap/idash-regions/releases/download/west-bengal/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/west-bengal/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       85.8,
