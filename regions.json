@@ -140,6 +140,8 @@
     "routingURL": "https://iamswap.github.io/idash-regions/packs/goa/tiles.tar",
     "basemapURL": "https://iamswap.github.io/idash-regions/packs/goa/basemap.pmtiles",
     "basemapFormat": "pbf",
+    "searchURL": "https://iamswap.github.io/idash-regions/packs/goa/search.sqlite",
+    "searchFormat": "fts",
     "version": "2026-06-28",
     "bbox": [
       73.6,
